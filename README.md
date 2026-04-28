@@ -4,7 +4,7 @@ Backend scaffold for the chat system. This service is intentionally focused on t
 
 ## Stack
 
-- Go 1.25
+- Go 1.25.9
 - Chi HTTP router
 - GORM
 - PostgreSQL
@@ -92,6 +92,16 @@ docker compose up --build
 ```
 
 The app listens on `http://localhost:8080`.
+
+## CI/CD
+
+GitHub Actions workflows live in `.github/workflows/`.
+
+- `CI`: runs on pull requests and pushes to `main`; validates formatting, modules, `go vet`, race-enabled tests, API build, Docker Compose config, Docker image build, and `govulncheck`.
+- `CodeQL`: runs on pull requests, pushes to `main`, a weekly schedule, and manual dispatch for static security analysis.
+- `Container Publish`: runs on pushes to `main`, semantic version tags, and manual dispatch; builds and publishes the Docker image to GitHub Container Registry.
+
+The current CD workflow publishes a container image only. It does not deploy to a production environment. A real production deployment should be added later when the target platform, environment protection rules, required secrets, rollback strategy, and approval process are defined.
 
 ## API Routes Registered
 
