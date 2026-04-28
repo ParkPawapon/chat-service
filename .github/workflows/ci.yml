@@ -59,7 +59,7 @@ jobs:
         run: go build -o /tmp/chat-service-api ./cmd/api
 
       - name: Validate Docker Compose
-        run: docker compose --env-file .env.example config
+        run: docker compose config
 
       - name: Build Docker image
         run: docker build --pull -t chat-service:ci .

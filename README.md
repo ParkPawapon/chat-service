@@ -104,8 +104,6 @@ docker compose up --build
 
 The app listens on `http://localhost:8080`.
 
-Docker Compose reads connection settings from the local `.env` file. Keep `.env` local only; commit changes to `.env.example` when a new variable is required.
-
 ## CI/CD
 
 GitHub Actions workflows live in `.github/workflows/`.
