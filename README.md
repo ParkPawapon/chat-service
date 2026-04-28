@@ -28,7 +28,7 @@ pkg                      small shared packages
 
 ## Team Guide
 
-ทีมควรอ่าน [docs/README.md](docs/README.md) ก่อนเริ่มพัฒนา เพื่อใช้กติกาเดียวกันเรื่อง branch naming, commit naming, PR rules, Go naming, migration naming และ checklist ก่อนเปิด PR
+Read [docs/README.md](docs/README.md) before contributing. It defines the shared team rules for branch naming, commit naming, PR expectations, Go naming, migration naming, CI/CD, security, and the pre-PR checklist.
 
 ## Environment
 
@@ -54,6 +54,17 @@ Required variables:
 | `REDIS_DB` | Redis database number |
 | `CORS_ALLOWED_ORIGINS` | Comma-separated allowed browser origins |
 | `ROOM_DEFAULT_TTL_MINUTES` | Default room lifetime in minutes |
+| `POSTGRES_USER` | Local Docker Compose PostgreSQL user |
+| `POSTGRES_PASSWORD` | Local Docker Compose PostgreSQL password |
+| `POSTGRES_DB` | Local Docker Compose PostgreSQL database |
+| `POSTGRES_PORT` | Host port mapped to local Docker Compose PostgreSQL |
+| `REDIS_PORT` | Host port mapped to local Docker Compose Redis |
+| `COMPOSE_DATABASE_URL` | PostgreSQL URL injected into the app container by Docker Compose |
+| `COMPOSE_REDIS_ADDR` | Redis address injected into the app container by Docker Compose |
+
+`DATABASE_URL` and `REDIS_ADDR` are intended for running the service directly on the host with `go run ./cmd/api`. `COMPOSE_DATABASE_URL` and `COMPOSE_REDIS_ADDR` are used by Docker Compose because containers connect to service names such as `postgres` and `redis` instead of `localhost`.
+
+Do not hardcode server connection settings, credentials, or ports in Docker files. Keep them in environment variables and keep real `.env` files out of Git.
 
 ## Run Locally
 

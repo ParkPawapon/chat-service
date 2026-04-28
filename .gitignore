@@ -1,0 +1,8 @@
+.env
+.env.*
+!.env.example
+
+tmp/
+dist/
+coverage.out
+*.test

@@ -1,33 +1,33 @@
 # Team Development Guide
 
-เอกสารนี้เป็นกติกากลางสำหรับทีมที่พัฒนา `chat-service` ใช้เป็นมาตรฐานเดียวกันเรื่องการตั้งชื่อ branch, commit, pull request, file, package, function, database migration และรูปแบบงานที่ควรทำในแต่ละ PR
+This document defines the shared engineering rules for `chat-service`. Use it as the team standard for branch names, commit messages, pull requests, file names, package names, function names, database migrations, CI/CD, security, and review checklists.
 
-เป้าหมายคือทำให้ repository อ่านง่าย ตรวจง่าย ขยายต่อได้ และลดความเสี่ยงจากการแก้โค้ดกระทบกันโดยไม่จำเป็น
+The goal is to keep the repository easy to read, easy to review, safe to operate, and predictable as the service grows.
 
-## หลักการทำงานร่วมกัน
+## Working Principles
 
-ก่อนเริ่มงานทุกครั้ง ให้ยึดหลักเหล่านี้:
+Follow these rules before starting any task:
 
-- แก้เฉพาะ scope ของงานที่ได้รับ
-- แยกงานใหญ่เป็น PR เล็กที่ review ได้จริง
-- ไม่เปลี่ยน public API contract ถ้า task ไม่ได้สั่ง
-- ไม่ย้ายโครงสร้าง folder โดยไม่มีเหตุผลทาง architecture
-- ไม่ใส่ business logic ใน HTTP handler
-- ไม่ใส่ database query ใน usecase หรือ handler โดยตรง
-- ไม่ expose raw client identifier ให้ client อื่นเห็น
-- ต้อง run validation ที่เกี่ยวข้องก่อนเปิดหรืออัปเดต PR
+- Change only the scope required by the task.
+- Keep pull requests small enough to review properly.
+- Do not change public API contracts unless the task explicitly requires it.
+- Do not move folders or rewrite structure without a clear architecture reason.
+- Do not put business logic in HTTP handlers.
+- Do not put database queries in handlers or use cases directly.
+- Do not expose raw client identifiers to other clients.
+- Run the relevant validation commands before opening or updating a pull request.
 
 ## Branch Naming
 
-Branch name ต้องบอกประเภทงานและขอบเขตงานให้ชัดเจน
+Branch names must describe the type of work and the scope.
 
-รูปแบบมาตรฐาน:
+Standard format:
 
 ```text
 <type>/<scope>-<short-description>
 ```
 
-ตัวอย่าง:
+Examples:
 
 ```text
 feat/chat-service-room-join
@@ -42,20 +42,20 @@ refactor/chat-service-message-repository
 
 ### Branch Types
 
-| Type | ใช้เมื่อ |
+| Type | Use when |
 | --- | --- |
-| `feat` | เพิ่ม feature หรือ behavior ใหม่ |
-| `fix` | แก้ bug |
-| `docs` | แก้เอกสารเท่านั้น |
-| `test` | เพิ่มหรือแก้ test |
-| `refactor` | ปรับโครงสร้างโค้ดโดยไม่เปลี่ยน behavior |
-| `chore` | งานดูแล repo เช่น Docker, dependency, config |
-| `perf` | ปรับ performance |
-| `build` | แก้ build system หรือ dependency ที่เกี่ยวกับ build |
+| `feat` | Adding a new feature or behavior |
+| `fix` | Fixing a bug |
+| `docs` | Changing documentation only |
+| `test` | Adding or changing tests |
+| `refactor` | Restructuring code without changing behavior |
+| `chore` | Repository maintenance, Docker, dependency, or config work |
+| `perf` | Improving performance |
+| `build` | Changing build tooling or build-related dependencies |
 
 ### Branch Rules
 
-ควรทำ:
+Good examples:
 
 ```text
 feat/chat-service-client-alias
@@ -63,7 +63,7 @@ fix/chat-service-invalid-room-status
 docs/chat-service-naming-guide
 ```
 
-ไม่ควรทำ:
+Bad examples:
 
 ```text
 update
@@ -75,17 +75,17 @@ final
 test123
 ```
 
-เหตุผลคือชื่อ branch ที่กว้างเกินไปทำให้ reviewer ไม่รู้ว่า branch นี้มีไว้ทำอะไร และทำให้ค้นย้อนหลังยาก
+Generic branch names make review and historical lookup harder. The name should tell another developer what the branch is for without opening the diff.
 
 ## Commit Naming
 
-ใช้รูปแบบ Conventional Commit
+Use Conventional Commit style:
 
 ```text
 <type>: <summary>
 ```
 
-ตัวอย่าง:
+Examples:
 
 ```text
 feat: implement room join use case
@@ -98,22 +98,22 @@ refactor: split message repository mapping
 
 ### Commit Types
 
-| Type | ใช้เมื่อ |
+| Type | Use when |
 | --- | --- |
-| `feat` | เพิ่ม behavior ใหม่ |
-| `fix` | แก้ bug |
-| `docs` | แก้เอกสาร |
-| `test` | เพิ่มหรือแก้ test |
-| `refactor` | refactor โดยไม่เปลี่ยน behavior |
-| `chore` | งานดูแลทั่วไป |
-| `perf` | ปรับ performance |
-| `build` | แก้ build/dependency |
+| `feat` | Adding new behavior |
+| `fix` | Fixing a bug |
+| `docs` | Changing documentation |
+| `test` | Adding or changing tests |
+| `refactor` | Refactoring without changing behavior |
+| `chore` | Maintenance work |
+| `perf` | Improving performance |
+| `build` | Changing build or dependency behavior |
 
 ### Commit Rules
 
-หนึ่ง commit ควรแทนหนึ่ง logical change
+One commit should represent one logical change.
 
-ควรทำ:
+Good examples:
 
 ```text
 feat: implement client alias lookup
@@ -121,7 +121,7 @@ test: add client alias use case tests
 docs: document branch naming rules
 ```
 
-ไม่ควรทำ:
+Bad examples:
 
 ```text
 update code
@@ -132,19 +132,19 @@ final
 done
 ```
 
-ถ้า commit มีหลายเรื่องปนกัน เช่น แก้ room logic, แก้ Dockerfile, และแก้ README ใน commit เดียว ควรแยก commit หรือแยก PR ตามความเหมาะสม
+If one commit mixes room logic, Docker changes, and README edits, split it into separate commits or separate pull requests when appropriate.
 
 ## Pull Request Naming
 
-PR title ต้องสรุปสิ่งที่เปลี่ยนแบบอ่านแล้วเข้าใจทันที
+PR titles must summarize the change clearly.
 
-รูปแบบที่แนะนำ:
+Recommended format:
 
 ```text
 <type>: <clear summary>
 ```
 
-ตัวอย่าง:
+Examples:
 
 ```text
 feat: implement room join endpoint
@@ -153,14 +153,14 @@ docs: add team development guide
 test: add message use case tests
 ```
 
-PR description ควรมีอย่างน้อย:
+Every PR description should include:
 
-- Summary: เปลี่ยนอะไร
-- Reason: ทำไปทำไม
-- Validation: ตรวจอะไรแล้ว
-- Notes: มีอะไรที่ยังไม่ทำหรือ intentionally left out
+- Summary: what changed
+- Reason: why the change is needed
+- Validation: what was checked
+- Notes: what is intentionally left out, if anything
 
-ตัวอย่าง:
+Example:
 
 ```md
 ## Summary
@@ -180,19 +180,38 @@ PR description ควรมีอย่างน้อย:
 
 ## Review Rules
 
-ทุก PR เข้า `main` ต้องผ่าน review อย่างน้อย 1 คน
+Every PR into `main` must have at least one review approval unless a repository owner intentionally uses the allowed admin bypass.
 
-Reviewer ควรตรวจ:
+Reviewers should check:
 
-- Scope ตรงกับ task หรือไม่
-- API contract เปลี่ยนโดยไม่ได้ตั้งใจหรือไม่
-- Layer boundary ถูกต้องหรือไม่
-- Error response ตรงรูปแบบกลางหรือไม่
-- มี test เพียงพอกับความเสี่ยงหรือไม่
-- ไม่มี raw client identifier ถูกส่งออกไปใน response หรือ log
-- ไม่มี secret หรือ credential ถูก commit
+- Whether the scope matches the task
+- Whether the API contract changed unexpectedly
+- Whether layer boundaries are respected
+- Whether error responses use the shared format
+- Whether test coverage is reasonable for the risk
+- Whether raw client identifiers are exposed in responses or logs
+- Whether secrets or credentials were committed
 
-ถ้า PR ยังไม่พร้อม merge ให้ใช้ Draft PR
+Use a Draft PR when the change is not ready to merge.
+
+## CI/CD Rules
+
+Every PR must allow GitHub Actions to finish before merge.
+
+Main workflows:
+
+- `CI`: checks formatting, module files, `go vet`, tests, build, Docker Compose config, Docker image build, and vulnerability scan.
+- `CodeQL`: runs static security analysis.
+- `Container Publish`: builds and publishes the Docker image to GitHub Container Registry after pushes to `main` or semantic version tags.
+
+Rules:
+
+- Do not merge a failing CI run without understanding the failure.
+- If CI fails because of the code change, fix it in the same branch and push again.
+- If CI fails because of external infrastructure, document the reason in the PR.
+- Current CD publishes a container image only. It does not deploy to production.
+- Production deployment requires environment protection, secrets, approval, rollback strategy, and a clear deployment target.
+- Never hardcode secrets in workflow files. Use GitHub Secrets or protected environment secrets.
 
 ## CI/CD Rules
 
@@ -215,9 +234,9 @@ Workflow หลักของ repository นี้:
 
 ## Go Package Naming
 
-Package name ต้องเป็นตัวเล็ก สั้น และชัดเจน
+Package names must be lowercase, short, and clear.
 
-ควรทำ:
+Good examples:
 
 ```text
 config
@@ -233,7 +252,7 @@ validator
 logger
 ```
 
-ไม่ควรทำ:
+Bad examples:
 
 ```text
 Config
@@ -244,18 +263,18 @@ commonUtils
 helpers
 ```
 
-กฎสำคัญ:
+Rules:
 
-- package ใช้ lowercase เท่านั้น
-- หลีกเลี่ยง underscore ในชื่อ package
-- หลีกเลี่ยงชื่อกว้างเกินไป เช่น `common`, `utils`, `helpers`
-- package name ควรบอก responsibility ไม่ใช่ implementation detail ที่ไม่จำเป็น
+- Use lowercase package names.
+- Avoid underscores in package names.
+- Avoid broad names such as `common`, `utils`, and `helpers`.
+- A package name should describe responsibility, not convenience.
 
 ## Go File Naming
 
-ชื่อไฟล์ใช้ snake_case และบอกหน้าที่ของไฟล์
+Use snake_case file names that describe responsibility.
 
-ควรทำ:
+Good examples:
 
 ```text
 room_usecase.go
@@ -266,7 +285,7 @@ message_repository.go
 request_id.go
 ```
 
-ไม่ควรทำ:
+Bad examples:
 
 ```text
 RoomUseCase.go
@@ -277,11 +296,11 @@ all.go
 main2.go
 ```
 
-ถ้าไฟล์เริ่มใหญ่เกินไป ให้แยกตาม responsibility ไม่ใช่แยกตามความสะดวกชั่วคราว
+If a file becomes too large, split it by responsibility.
 
 ## Go Type Naming
 
-Exported type ใช้ PascalCase
+Exported types use PascalCase.
 
 ```go
 type RoomUseCase struct {}
@@ -289,16 +308,16 @@ type MessageRepository interface {}
 type AliasHandler struct {}
 ```
 
-Private type ใช้ camelCase
+Private types use camelCase.
 
 ```go
 type requestIDKey struct {}
 type statusRecorder struct {}
 ```
 
-Interface name ควรตั้งตาม behavior
+Interfaces should be named by behavior.
 
-ควรทำ:
+Good examples:
 
 ```go
 type RoomRepository interface {}
@@ -306,7 +325,7 @@ type MessagePubSub interface {}
 type MessageSubscription interface {}
 ```
 
-ไม่ควรทำ:
+Bad examples:
 
 ```go
 type IRoomRepository interface {}
@@ -314,13 +333,13 @@ type RoomRepositoryInterface interface {}
 type Manager interface {}
 ```
 
-ใน Go ไม่ต้องเติม `I` หน้า interface
+Do not prefix Go interfaces with `I`.
 
 ## Function Naming
 
-Function name ต้องบอก action ชัดเจน
+Function names must describe the action.
 
-ควรทำ:
+Good examples:
 
 ```go
 func NewRoomUseCase(...) *RoomUseCase
@@ -329,7 +348,7 @@ func MarkMemberLeft(ctx context.Context, roomID string, identifierHash string, l
 func roomToModel(room *domain.Room) RoomModel
 ```
 
-ไม่ควรทำ:
+Bad examples:
 
 ```go
 func Do(...)
@@ -339,13 +358,13 @@ func Manage(...)
 func Convert(...)
 ```
 
-ถ้า function ชื่อกว้างเกินไป มักเป็นสัญญาณว่า function นั้นทำหลายอย่างเกินไป
+Broad function names usually mean the function is doing too much.
 
 ## Variable Naming
 
-ใช้ชื่อสั้นได้เมื่อ scope แคบ แต่ต้องอ่านรู้เรื่อง
+Short names are acceptable in small scopes, but names must still be meaningful.
 
-ควรทำ:
+Good examples:
 
 ```go
 ctx := r.Context()
@@ -354,7 +373,7 @@ identifierHash := idgen.HashIdentifier(req.Identifier)
 message := domain.Message{}
 ```
 
-ไม่ควรทำ:
+Bad examples:
 
 ```go
 x := req.RoomID
@@ -363,11 +382,11 @@ thing := idgen.HashIdentifier(req.Identifier)
 resultObj := output
 ```
 
-ชื่อตัวแปรควรสะท้อนความหมายทาง domain เช่น `roomID`, `identifierHash`, `senderName`, `expiresAt`
+Variable names should reflect domain meaning, such as `roomID`, `identifierHash`, `senderName`, and `expiresAt`.
 
 ## Error Naming
 
-Domain error กลางใช้รูปแบบ `Err<Name>`
+Shared domain errors use the `Err<Name>` format.
 
 ```go
 var (
@@ -377,39 +396,39 @@ var (
 )
 ```
 
-Error message ที่ส่งให้ client ต้องเป็นภาษาอังกฤษ และไม่ควรเปิดเผย internal detail เช่น SQL query, Redis command, connection string หรือ secret
+Client-facing error messages must be in English and must not expose internal details such as SQL queries, Redis commands, connection strings, or secrets.
 
 ## Context Rules
 
-Function ที่ทำ I/O หรือทำงานข้าม layer ต้องรับ `context.Context` เป็น parameter แรก
+Functions that perform I/O or cross layer boundaries must accept `context.Context` as the first parameter.
 
-ควรทำ:
+Good example:
 
 ```go
 func (r *RoomRepository) FindByRoomID(ctx context.Context, roomID string) (*domain.Room, error)
 ```
 
-ไม่ควรทำ:
+Bad example:
 
 ```go
 func (r *RoomRepository) FindByRoomID(roomID string) (*domain.Room, error)
 ```
 
-Handler ต้องส่ง `r.Context()` เข้า usecase เสมอ
+Handlers must pass `r.Context()` into use cases.
 
 ```go
 output, err := h.useCase.GetStatus(r.Context(), roomID)
 ```
 
-ห้ามสร้าง `context.Background()` ใน handler, usecase หรือ repository เพื่อแทน request context ยกเว้นเป็น background job ที่ออกแบบไว้โดยเฉพาะ
+Do not create `context.Background()` inside handlers, use cases, or repositories to replace request context. The exception is a deliberate background job with its own lifecycle.
 
 ## API Route Naming
 
-Route ใช้ lowercase และ resource-based naming
+Routes use lowercase, resource-based names.
 
-Business API ต้องอยู่ใต้ `/api/v1` เพื่อให้สามารถเพิ่ม `/api/v2` ในอนาคตได้เมื่อมี breaking change ส่วน `/health` ไม่ต้องใส่ version เพราะเป็น operational endpoint สำหรับ health check ไม่ใช่ business API contract
+Business APIs must live under `/api/v1` so a future `/api/v2` can be introduced for breaking changes. `/health` stays unversioned because it is an operational endpoint, not a business API contract.
 
-ใช้รูปแบบ:
+Use this pattern:
 
 ```text
 GET    /health
@@ -421,7 +440,7 @@ GET    /api/v1/messages
 GET    /api/v1/messages/stream
 ```
 
-ไม่ควรเพิ่ม route ที่ชื่อกำกวม เช่น:
+Avoid ambiguous routes:
 
 ```text
 POST /api/v1/do-room
@@ -429,13 +448,13 @@ POST /api/v1/action
 GET  /api/v1/getMessages
 ```
 
-ถ้าต้องเพิ่ม endpoint ใหม่ ให้ยึดรูปแบบ resource เดิมของระบบ
+New endpoints should follow the existing resource style.
 
 ## JSON Field Naming
 
-JSON field ใช้ camelCase ตาม frontend contract
+JSON fields use camelCase to match frontend contracts.
 
-ตัวอย่าง:
+Example:
 
 ```json
 {
@@ -446,7 +465,7 @@ JSON field ใช้ camelCase ตาม frontend contract
 }
 ```
 
-Go struct field ใช้ PascalCase แต่ tag JSON ใช้ camelCase
+Go struct fields use PascalCase, while JSON tags use camelCase.
 
 ```go
 type CreateMessageRequest struct {
@@ -456,11 +475,11 @@ type CreateMessageRequest struct {
 }
 ```
 
-ห้ามเปลี่ยน JSON field name โดยไม่ตรวจ frontend contract
+Do not change JSON field names without checking the frontend contract.
 
 ## Database Naming
 
-Table name ใช้ plural snake_case
+Table names use plural snake_case.
 
 ```text
 rooms
@@ -469,7 +488,7 @@ client_aliases
 messages
 ```
 
-Column name ใช้ snake_case
+Column names use snake_case.
 
 ```text
 room_id
@@ -481,7 +500,7 @@ created_at
 updated_at
 ```
 
-Index name ควรบอก table และ columns
+Index names should identify the table and columns.
 
 ```text
 idx_messages_room_sent_at
@@ -489,7 +508,7 @@ idx_rooms_destroyed_expires_at
 idx_client_aliases_room_id
 ```
 
-Unique constraint name ควรขึ้นต้นด้วย `uq_`
+Unique constraint names should start with `uq_`.
 
 ```text
 uq_room_members_room_identifier
@@ -498,7 +517,7 @@ uq_client_aliases_room_identifier
 
 ## Migration Naming
 
-Migration file ใช้เลขลำดับและคำอธิบายสั้นๆ
+Migration files use a sequence number and a short description.
 
 ```text
 000001_create_chat_tables.up.sql
@@ -507,17 +526,17 @@ Migration file ใช้เลขลำดับและคำอธิบา�
 000002_add_room_destroyed_at.down.sql
 ```
 
-กฎ migration:
+Migration rules:
 
-- ทุก `.up.sql` ต้องมี `.down.sql`
-- ห้ามแก้ migration เก่าที่ merge ไปแล้ว ยกเว้นยังไม่เคย deploy
-- migration ต้อง review ได้ง่าย
-- หลีกเลี่ยง destructive change ถ้าไม่มี migration plan ชัดเจน
-- production migration ต้องคำนึงถึง data เดิมเสมอ
+- Every `.up.sql` file must have a matching `.down.sql` file.
+- Do not edit old migrations after they are merged, unless they have never been deployed anywhere.
+- Migrations must be easy to review.
+- Avoid destructive changes without a clear migration plan.
+- Production migrations must account for existing data.
 
 ## Environment Variable Naming
 
-Environment variables ใช้ uppercase snake_case
+Environment variables use uppercase snake_case.
 
 ```text
 APP_ENV
@@ -531,16 +550,37 @@ CORS_ALLOWED_ORIGINS
 ROOM_DEFAULT_TTL_MINUTES
 ```
 
-กฎสำคัญ:
+Rules:
 
-- ห้าม commit secret จริง
-- `.env.example` ใส่ได้เฉพาะค่าตัวอย่าง
-- ถ้าเพิ่ม env ใหม่ ต้อง update `.env.example` และ README
-- ชื่อ env ต้องอ่านแล้วรู้ว่าควบคุม behavior อะไร
+- Do not commit real secrets.
+- `.env.example` may contain sample local values only.
+- If a new environment variable is added, update `.env.example` and README.
+- Environment variable names should clearly describe the behavior they control.
+
+## Docker And Environment Configuration
+
+Docker files must not hardcode server connection settings, credentials, or ports.
+
+Use environment variables for:
+
+- Application port
+- PostgreSQL user, password, database, and host port
+- Redis host port
+- Application `DATABASE_URL`
+- Application `REDIS_ADDR`
+- CORS origins
+- Room TTL
+
+Local Docker Compose may read these values from a local `.env` file, but the real `.env` file must never be committed. Keep only `.env.example` in Git.
+
+Use separate values when the app runs on the host versus inside Docker Compose:
+
+- Host run: `DATABASE_URL` points to `localhost`, and `REDIS_ADDR` points to `localhost`.
+- Compose app run: `COMPOSE_DATABASE_URL` points to the `postgres` service, and `COMPOSE_REDIS_ADDR` points to the `redis` service.
 
 ## Layer Boundary Rules
 
-ระบบนี้แบ่ง layer ชัดเจน
+The service has clear layer boundaries.
 
 ```text
 delivery/http -> usecase -> domain
@@ -550,71 +590,71 @@ bootstrap -> wires dependencies
 
 ### Handler
 
-Handler ทำได้:
+Handlers may:
 
-- decode request
-- validate request
-- call usecase
-- map response
+- Decode requests
+- Validate requests
+- Call use cases
+- Map responses
 
-Handler ห้าม:
+Handlers must not:
 
-- query database
-- call Redis โดยตรง
-- เขียน business rule ซับซ้อน
-- ใช้ GORM model
+- Query the database
+- Call Redis directly
+- Implement complex business rules
+- Use GORM models
 
 ### Usecase
 
-Usecase ทำได้:
+Use cases may:
 
-- orchestrate business flow
-- call repository interface
-- enforce business rule
-- return domain/application error
+- Orchestrate business flow
+- Call repository interfaces
+- Enforce business rules
+- Return domain or application errors
 
-Usecase ห้าม:
+Use cases must not:
 
-- import GORM
-- import Chi
-- import HTTP package
-- รู้จัก DTO ของ HTTP layer
+- Import GORM
+- Import Chi
+- Import HTTP packages
+- Know HTTP DTO types
 
 ### Domain
 
-Domain ทำได้:
+Domain may:
 
-- define entity
-- define repository interface
-- define domain/application error
+- Define entities
+- Define repository interfaces
+- Define domain and application errors
 
-Domain ห้าม:
+Domain must not:
 
-- import infrastructure
-- import delivery/http
-- import config
-- import GORM
-- import Redis client
+- Import infrastructure
+- Import delivery/http
+- Import config
+- Import GORM
+- Import Redis clients
 
 ### Infrastructure
 
-Infrastructure ทำได้:
+Infrastructure may:
 
-- connect external systems
-- implement repository interface
-- map domain entity กับ database model
+- Connect to external systems
+- Implement repository interfaces
+- Map domain entities to database models
 
-Infrastructure ห้าม:
+Infrastructure must not:
 
-- รับ HTTP request object
-- return HTTP response
-- บังคับ business workflow ที่ควรอยู่ใน usecase
+- Accept HTTP request objects
+- Return HTTP responses
+- Own business workflows that belong in use cases
 
 ## Task Naming
 
-Task ควรตั้งชื่อให้เล็กและทำจบใน PR เดียว
+Tasks should be small enough to complete in one PR.
 
-ควรทำ:
+Good examples:
 
 ```text
 Implement client alias use case
@@ -624,7 +664,7 @@ Implement message creation flow
 Add tests for room use case
 ```
 
-ไม่ควรทำ:
+Bad examples:
 
 ```text
 Build chat backend
@@ -633,91 +673,91 @@ Improve system
 Fix everything
 ```
 
-Task ที่ดีควรมี:
+A good task should include:
 
-- endpoint หรือ module ที่เกี่ยวข้อง
-- expected behavior
-- files/layers ที่คาดว่าจะต้องแก้
-- validation ที่ต้องผ่าน
+- The endpoint or module involved
+- Expected behavior
+- Expected files or layers to change
+- Required validation
 
 ## Testing Rules
 
-ก่อน push หรือเปิด PR ควรรันอย่างน้อย:
+Before pushing or opening a PR, run at least:
 
 ```sh
 go test ./...
 ```
 
-ถ้าแก้ build หรือ dependency:
+When build or dependency behavior changes, run:
 
 ```sh
 go build ./cmd/api
 ```
 
-ถ้าแก้ Docker Compose:
+When Docker Compose changes, run:
 
 ```sh
-docker compose config
+docker compose --env-file .env.example config
 ```
 
-ถ้าแก้ API behavior ควรมี test ในระดับ usecase เป็นอย่างน้อย
+When API behavior changes, add use case tests at minimum.
 
 ## Documentation Rules
 
-ถ้าแก้ behavior ที่กระทบ developer คนอื่น ต้อง update เอกสาร
+Update documentation when behavior affects other developers.
 
-ควร update README เมื่อ:
+Update README when:
 
-- เพิ่ม env variable
-- เพิ่ม endpoint
-- เปลี่ยนวิธี run service
-- เพิ่ม dependency ใหม่
-- เปลี่ยน migration workflow
+- Adding an environment variable
+- Adding an endpoint
+- Changing the service run flow
+- Adding a dependency
+- Changing the migration workflow
 
-เอกสารควรเขียนให้คนในทีมอ่านแล้วทำตามได้ทันที ไม่ควรเขียนเป็นข้อความกำกวม
+Documentation should be direct and actionable.
 
 ## Security Rules
 
-ห้าม commit สิ่งเหล่านี้:
+Never commit:
 
-- password จริง
-- access token
-- private key
-- production connection string
-- raw client identifier ใน log หรือ response
-- ไฟล์ `.env` จริง
+- Real passwords
+- Access tokens
+- Private keys
+- Production connection strings
+- Raw client identifiers in logs or responses
+- Real `.env` files
 
-สิ่งที่ต้องระวังใน service นี้:
+Service-specific security rules:
 
-- client identifier ต้อง hash ก่อน persist
-- response ต้องส่ง alias ไม่ใช่ raw identifier
-- error response ต้องไม่ leak internal detail
-- log ต้องไม่เก็บ secret หรือข้อมูลส่วนตัวที่ไม่จำเป็น
+- Hash client identifiers before persistence.
+- Return aliases, not raw identifiers.
+- Do not leak internal details in error responses.
+- Do not log secrets or unnecessary personal data.
 
-## Checklist ก่อนเปิด PR
+## Pre-PR Checklist
 
-ใช้ checklist นี้ก่อนเปิด PR ทุกครั้ง:
+Use this checklist before opening every PR:
 
-- Branch name ถูกต้อง
-- Commit message ถูกต้อง
-- Scope ของ PR ไม่กว้างเกินไป
-- ไม่มีไฟล์ลับหรือ credential
-- ไม่มี frontend change ถ้า task เป็น backend-only
-- Layer boundary ถูกต้อง
-- API contract ไม่เปลี่ยนโดยไม่ตั้งใจ
-- `go test ./...` ผ่าน
-- README หรือ docs ถูก update ถ้าจำเป็น
-- PR description อธิบายสิ่งที่เปลี่ยนและ validation ครบ
+- Branch name follows the naming rule.
+- Commit message follows the naming rule.
+- PR scope is not too broad.
+- No secrets or credentials are committed.
+- No frontend changes are included in backend-only tasks.
+- Layer boundaries are respected.
+- API contract did not change unexpectedly.
+- `go test ./...` passes.
+- README or docs are updated when needed.
+- PR description explains the change and validation.
 
-## สรุป
+## Summary
 
-มาตรฐานการตั้งชื่อและการแยกงานช่วยให้ทีม review ง่าย ลด conflict และทำให้ repository โตได้อย่างเป็นระบบ
+Consistent naming and small scoped changes make reviews easier, reduce conflicts, and help the repository grow safely.
 
-ถ้าไม่แน่ใจว่าจะตั้งชื่อ branch, commit, file หรือ package อย่างไร ให้เลือกชื่อที่อ่านแล้วตอบคำถามได้ทันทีว่า:
+When naming a branch, commit, file, package, or task, choose a name that clearly answers:
 
-- งานนี้ทำอะไร
-- กระทบส่วนไหน
-- เปลี่ยน behavior หรือไม่
-- reviewer ต้องตรวจเรื่องอะไร
+- What does this do?
+- Which area does it affect?
+- Does it change behavior?
+- What should the reviewer focus on?
 
-ชื่อที่ดีช่วยลดความผิดพลาดได้ตั้งแต่ก่อนเริ่ม review
+Good names reduce mistakes before review starts.
