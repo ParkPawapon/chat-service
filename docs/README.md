@@ -194,6 +194,25 @@ Reviewer ควรตรวจ:
 
 ถ้า PR ยังไม่พร้อม merge ให้ใช้ Draft PR
 
+## CI/CD Rules
+
+ทุก PR ต้องปล่อยให้ GitHub Actions ทำงานจนจบก่อน merge
+
+Workflow หลักของ repository นี้:
+
+- `CI`: ตรวจ formatting, module files, `go vet`, tests, build, Docker Compose config, Docker image build และ vulnerability scan
+- `CodeQL`: ตรวจ static security analysis
+- `Container Publish`: build และ publish Docker image ไป GitHub Container Registry เมื่อมี push เข้า `main` หรือ tag แบบ semantic version
+
+กฎสำคัญ:
+
+- ห้าม merge ถ้า CI fail โดยไม่เข้าใจสาเหตุ
+- ถ้า CI fail จาก code change ต้องแก้ใน branch เดิมและ push เพิ่ม
+- ถ้า CI fail จาก infrastructure ภายนอก ให้ระบุใน PR ว่าเกิดจากอะไร
+- CD ปัจจุบัน publish image เท่านั้น ยังไม่ deploy production จริง
+- Production deployment ต้องมี environment protection, secrets, approval และ rollback plan ก่อนเพิ่ม workflow
+- ห้ามใส่ secret ลง workflow file โดยตรง ให้ใช้ GitHub Secrets หรือ environment secrets เท่านั้น
+
 ## Go Package Naming
 
 Package name ต้องเป็นตัวเล็ก สั้น และชัดเจน
