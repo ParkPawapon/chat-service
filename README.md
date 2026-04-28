@@ -26,6 +26,10 @@ migrations               SQL migration files
 pkg                      small shared packages
 ```
 
+## Team Guide
+
+ทีมควรอ่าน [docs/README.md](docs/README.md) ก่อนเริ่มพัฒนา เพื่อใช้กติกาเดียวกันเรื่อง branch naming, commit naming, PR rules, Go naming, migration naming และ checklist ก่อนเปิด PR
+
 ## Environment
 
 Copy `.env.example` and export the values before running locally:
