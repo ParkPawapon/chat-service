@@ -36,7 +36,7 @@ func NewRouter(deps RouterDependencies) http.Handler {
 
 	r.Get("/health", healthHandler.Get)
 
-	r.Route("/api", func(r chi.Router) {
+	r.Route("/api/v1", func(r chi.Router) {
 		r.Post("/client-alias", aliasHandler.GetOrCreate)
 		r.Post("/rooms", roomHandler.Action)
 		r.Get("/rooms/status", roomHandler.Status)
