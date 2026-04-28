@@ -96,12 +96,12 @@ The app listens on `http://localhost:8080`.
 ## API Routes Registered
 
 - `GET /health`
-- `POST /api/client-alias`
-- `POST /api/rooms`
-- `GET /api/rooms/status?roomId=...`
-- `POST /api/messages`
-- `GET /api/messages?roomId=...`
-- `GET /api/messages/stream?roomId=...`
+- `POST /api/v1/client-alias`
+- `POST /api/v1/rooms`
+- `GET /api/v1/rooms/status?roomId=...`
+- `POST /api/v1/messages`
+- `GET /api/v1/messages?roomId=...`
+- `GET /api/v1/messages/stream?roomId=...`
 
 ## Intentional TODOs
 

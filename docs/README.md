@@ -388,24 +388,26 @@ output, err := h.useCase.GetStatus(r.Context(), roomID)
 
 Route ใช้ lowercase และ resource-based naming
 
+Business API ต้องอยู่ใต้ `/api/v1` เพื่อให้สามารถเพิ่ม `/api/v2` ในอนาคตได้เมื่อมี breaking change ส่วน `/health` ไม่ต้องใส่ version เพราะเป็น operational endpoint สำหรับ health check ไม่ใช่ business API contract
+
 ใช้รูปแบบ:
 
 ```text
 GET    /health
-POST   /api/client-alias
-POST   /api/rooms
-GET    /api/rooms/status
-POST   /api/messages
-GET    /api/messages
-GET    /api/messages/stream
+POST   /api/v1/client-alias
+POST   /api/v1/rooms
+GET    /api/v1/rooms/status
+POST   /api/v1/messages
+GET    /api/v1/messages
+GET    /api/v1/messages/stream
 ```
 
 ไม่ควรเพิ่ม route ที่ชื่อกำกวม เช่น:
 
 ```text
-POST /api/do-room
-POST /api/action
-GET  /api/getMessages
+POST /api/v1/do-room
+POST /api/v1/action
+GET  /api/v1/getMessages
 ```
 
 ถ้าต้องเพิ่ม endpoint ใหม่ ให้ยึดรูปแบบ resource เดิมของระบบ
