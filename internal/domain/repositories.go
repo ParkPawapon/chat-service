@@ -11,6 +11,7 @@ type RoomRepository interface {
 	Update(ctx context.Context, room *Room) error
 	AddMember(ctx context.Context, member *RoomMember) error
 	FindMember(ctx context.Context, roomID string, identifierHash string) (*RoomMember, error)
+	ReactivateMember(ctx context.Context, roomID string, identifierHash string, joinedAt time.Time) error
 	MarkMemberLeft(ctx context.Context, roomID string, identifierHash string, leftAt time.Time) error
 }
 

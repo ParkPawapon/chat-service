@@ -108,6 +108,23 @@ func (r *RoomRepository) FindMember(ctx context.Context, roomID string, identifi
 	return &member, nil
 }
 
+func (r *RoomRepository) ReactivateMember(ctx context.Context, roomID string, identifierHash string, joinedAt time.Time) error {
+	result := r.db.WithContext(ctx).
+		Model(&RoomMemberModel{}).
+		Where("room_id = ? AND identifier_hash = ?", roomID, identifierHash).
+		Updates(map[string]any{
+			"joined_at": joinedAt.UTC(),
+			"left_at":   nil,
+		})
+	if result.Error != nil {
+		return domain.WrapAppError(domain.ErrDependency, "failed to reactivate room member", result.Error)
+	}
+	if result.RowsAffected == 0 {
+		return domain.NewAppError(domain.ErrNotFound, "room member not found")
+	}
+	return nil
+}
+
 func (r *RoomRepository) MarkMemberLeft(ctx context.Context, roomID string, identifierHash string, leftAt time.Time) error {
 	result := r.db.WithContext(ctx).
 		Model(&RoomMemberModel{}).
