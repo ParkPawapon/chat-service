@@ -534,6 +534,27 @@ Migration rules:
 - Avoid destructive changes without a clear migration plan.
 - Production migrations must account for existing data.
 
+## Migration Execution
+
+Use `golang-migrate` through the project Makefile. This is the only supported local migration workflow.
+
+```sh
+make migrate-up
+make migrate-down
+make migrate-version
+make migrate-force version=1
+make migrate-create name=add_room_destroyed_at
+```
+
+Rules:
+
+- `DATABASE_URL` is required and must point to the same PostgreSQL database used by the backend.
+- The service must fail at startup when `DATABASE_URL` is missing.
+- Do not rely on TablePlus as the standard migration runner.
+- Use TablePlus only to inspect local data after migrations have been applied.
+- Do not run raw migration SQL against an unknown `localhost` connection.
+- Always confirm the database name, port, and schema when debugging migration issues.
+
 ## Environment Variable Naming
 
 Environment variables use uppercase snake_case.
