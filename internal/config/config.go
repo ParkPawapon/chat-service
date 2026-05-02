@@ -36,7 +36,7 @@ func Load() (*Config, error) {
 		AppEnv:                getenv("APP_ENV", "development"),
 		AppPort:               getenv("APP_PORT", "8080"),
 		AppName:               getenv("APP_NAME", "chat-service"),
-		DatabaseURL:           getenv("DATABASE_URL", "postgres://chat:chat@localhost:5432/chat_service?sslmode=disable"),
+		DatabaseURL:           getenvRequired("DATABASE_URL"),
 		RedisAddr:             getenv("REDIS_ADDR", "localhost:6379"),
 		RedisPassword:         getenv("REDIS_PASSWORD", ""),
 		RedisDB:               redisDB,
@@ -64,6 +64,10 @@ func getenv(key string, fallback string) string {
 		return fallback
 	}
 	return value
+}
+
+func getenvRequired(key string) string {
+	return strings.TrimSpace(os.Getenv(key))
 }
 
 func getenvInt(key string, fallback int) (int, error) {

@@ -71,10 +71,22 @@ Do not hardcode server connection settings, credentials, or ports in Docker file
 Start PostgreSQL and Redis:
 
 ```sh
-docker compose up -d postgres redis
+docker compose --env-file .env up -d postgres redis
 ```
 
-Apply migrations with your migration tool of choice. The SQL files live in `migrations/`.
+Apply migrations with the project Makefile. This is the only supported local migration path:
+
+```sh
+make migrate-up
+```
+
+The Makefile uses `golang-migrate` with the `DATABASE_URL` value from `.env`. Do not apply migrations manually through TablePlus for normal development, because it is easy to run the SQL against a different local PostgreSQL instance, port, database, or schema.
+
+Verify the migration version when needed:
+
+```sh
+make migrate-version
+```
 
 Run the service:
 
@@ -99,10 +111,32 @@ Expected response:
 Build and run the app with its local dependencies:
 
 ```sh
-docker compose up --build
+docker compose --env-file .env up --build
 ```
 
 The app listens on `http://localhost:8080`.
+
+## Database Migrations
+
+Migration files live in `migrations/` and are executed with `golang-migrate`.
+
+Supported commands:
+
+```sh
+make migrate-up
+make migrate-down
+make migrate-version
+make migrate-force version=1
+make migrate-create name=add_room_destroyed_at
+```
+
+Rules:
+
+- `DATABASE_URL` is required. The service no longer falls back to a default database URL.
+- Load `.env` or keep `.env` in the project root before running migration commands.
+- Run migrations against the same database that the backend uses.
+- Use TablePlus only to inspect data, not as the standard migration runner.
+- Do not edit old migration files after they are merged and used by other developers.
 
 ## CI/CD
 
