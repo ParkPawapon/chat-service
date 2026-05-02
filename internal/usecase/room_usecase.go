@@ -68,29 +68,45 @@ func (u *RoomUseCase) JoinRoom(ctx context.Context, input RoomActionInput) (*Joi
 			IsDestroyed:         false,
 			ExpiresAt:           now.Add(u.defaultTTL),
 		}
-		if err := u.rooms.Create(ctx, room); err != nil {
-			return nil, err
-		}
-
 		member := &domain.RoomMember{
 			RoomID:         roomID,
 			IdentifierHash: identifierHash,
 			JoinedAt:       now,
 		}
-		if err := u.rooms.AddMember(ctx, member); err != nil {
+		created, err := u.rooms.EnsureRoomWithOwnerMember(ctx, room, member)
+		if err != nil {
+			return nil, err
+		}
+		if created {
+			return &JoinRoomOutput{
+				IsDestroyed: false,
+				IsOwner:     true,
+			}, nil
+		}
+
+		if room.IsDestroyed {
+			return &JoinRoomOutput{
+				IsDestroyed: true,
+				IsOwner:     false,
+			}, nil
+		}
+		if room.ExpiresAt.Before(now) {
+			return nil, domain.NewAppError(domain.ErrGone, "room has expired")
+		}
+		if err := u.ensureActiveMember(ctx, roomID, identifierHash, now); err != nil {
 			return nil, err
 		}
 
 		return &JoinRoomOutput{
 			IsDestroyed: false,
-			IsOwner:     true,
+			IsOwner:     room.OwnerIdentifierHash == identifierHash,
 		}, nil
 	}
 
 	if room.IsDestroyed {
 		return &JoinRoomOutput{
 			IsDestroyed: true,
-			IsOwner:     room.OwnerIdentifierHash == identifierHash,
+			IsOwner:     false,
 		}, nil
 	}
 	if room.ExpiresAt.Before(now) {
@@ -118,14 +134,14 @@ func (u *RoomUseCase) DestroyRoom(ctx context.Context, input RoomActionInput) (*
 		return nil, err
 	}
 
-	if room.IsDestroyed {
-		return &DestroyRoomOutput{IsDestroyed: true}, nil
+	if room.OwnerIdentifierHash != identifierHash {
+		return nil, domain.NewAppError(domain.ErrForbidden, "only the room owner can destroy the room")
 	}
 	if room.ExpiresAt.Before(time.Now().UTC()) {
 		return nil, domain.NewAppError(domain.ErrGone, "room has expired")
 	}
-	if room.OwnerIdentifierHash != identifierHash {
-		return nil, domain.NewAppError(domain.ErrForbidden, "only the room owner can destroy the room")
+	if room.IsDestroyed {
+		return &DestroyRoomOutput{IsDestroyed: true}, nil
 	}
 
 	room.IsDestroyed = true

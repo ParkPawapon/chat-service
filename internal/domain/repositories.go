@@ -8,6 +8,7 @@ import (
 type RoomRepository interface {
 	Create(ctx context.Context, room *Room) error
 	FindByRoomID(ctx context.Context, roomID string) (*Room, error)
+	EnsureRoomWithOwnerMember(ctx context.Context, room *Room, member *RoomMember) (bool, error)
 	Update(ctx context.Context, room *Room) error
 	AddMember(ctx context.Context, member *RoomMember) error
 	FindMember(ctx context.Context, roomID string, identifierHash string) (*RoomMember, error)
