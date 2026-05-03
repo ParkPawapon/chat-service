@@ -8,9 +8,11 @@ import (
 type RoomRepository interface {
 	Create(ctx context.Context, room *Room) error
 	FindByRoomID(ctx context.Context, roomID string) (*Room, error)
+	EnsureRoomWithOwnerMember(ctx context.Context, room *Room, member *RoomMember) (bool, error)
 	Update(ctx context.Context, room *Room) error
 	AddMember(ctx context.Context, member *RoomMember) error
 	FindMember(ctx context.Context, roomID string, identifierHash string) (*RoomMember, error)
+	ReactivateMember(ctx context.Context, roomID string, identifierHash string, joinedAt time.Time) error
 	MarkMemberLeft(ctx context.Context, roomID string, identifierHash string, leftAt time.Time) error
 }
 
