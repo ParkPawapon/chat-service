@@ -2,8 +2,12 @@ package usecase
 
 import (
 	"context"
+	"errors"
+	"fmt"
+	"strings"
 
 	"chat-service/internal/domain"
+	"chat-service/pkg/idgen"
 )
 
 type AliasUseCase struct {
@@ -24,9 +28,48 @@ func NewAliasUseCase(aliases domain.AliasRepository) *AliasUseCase {
 }
 
 func (u *AliasUseCase) GetOrCreateAlias(ctx context.Context, input GetAliasInput) (*GetAliasOutput, error) {
-	_ = ctx
-	_ = input
+	roomID := strings.TrimSpace(input.RoomID)
+	if roomID == "" {
+		return nil, domain.NewAppError(domain.ErrInvalidInput, "roomId is required")
+	}
 
-	// TODO: hash the identifier, load or create a stable alias per room, and persist it.
-	return nil, domain.NewAppError(domain.ErrNotImplemented, "client alias use case is not implemented yet")
+	identifier := strings.TrimSpace(input.Identifier)
+	if identifier == "" {
+		return nil, domain.NewAppError(domain.ErrInvalidInput, "identifier is required")
+	}
+
+	identifierHash := idgen.HashIdentifier(identifier)
+
+	alias, err := u.aliases.Find(ctx, roomID, identifierHash)
+	if err == nil {
+		return &GetAliasOutput{Alias: alias.Alias}, nil
+	}
+	if !errors.Is(err, domain.ErrNotFound) {
+		return nil, err
+	}
+
+	clientAlias := &domain.ClientAlias{
+		RoomID:         roomID,
+		IdentifierHash: identifierHash,
+		Alias:          generateClientAlias(identifierHash),
+	}
+	if err := u.aliases.Create(ctx, clientAlias); err != nil {
+		alias, findErr := u.aliases.Find(ctx, roomID, identifierHash)
+		if findErr == nil {
+			return &GetAliasOutput{Alias: alias.Alias}, nil
+		}
+		return nil, err
+	}
+
+	return &GetAliasOutput{Alias: clientAlias.Alias}, nil
+}
+
+func generateClientAlias(identifierHash string) string {
+	const aliasPrefixLength = 8
+
+	if len(identifierHash) < aliasPrefixLength {
+		return fmt.Sprintf("Client-%s", strings.ToUpper(identifierHash))
+	}
+
+	return fmt.Sprintf("Client-%s", strings.ToUpper(identifierHash[:aliasPrefixLength]))
 }
