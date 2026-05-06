@@ -30,6 +30,8 @@ pkg                      small shared packages
 
 Read [docs/README.md](docs/README.md) before contributing. It defines the shared team rules for branch naming, commit naming, PR expectations, Go naming, migration naming, CI/CD, security, and the pre-PR checklist.
 
+For backend unit test work, read [docs/unit-testing/README.md](docs/unit-testing/README.md). It defines the testing boundaries, file placement, fake dependency rules, and validation checklist for this service.
+
 ## Environment
 
 Copy `.env.example` and export the values before running locally:
