@@ -17,6 +17,8 @@ Follow these rules before starting any task:
 - Do not expose raw client identifiers to other clients.
 - Run the relevant validation commands before opening or updating a pull request.
 
+For unit test work, read [Unit Testing Guide](unit-testing/README.md). It explains where tests belong, how to use fakes, what each layer should test, and the validation commands required before review.
+
 ## Branch Naming
 
 Branch names must describe the type of work and the scope.
