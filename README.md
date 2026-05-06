@@ -160,12 +160,12 @@ The current CD workflow publishes a container image only. It does not deploy to 
 
 ## Intentional TODOs
 
-Business behavior is not fully implemented in this scaffold. The use cases currently define the application boundaries and return `501 Not Implemented` after handlers validate incoming requests. Follow-up endpoint tasks should implement:
+The initial scaffold has been extended with minimal alias, room, and message behavior. The service is still not a complete production chat system. Follow-up endpoint tasks should harden:
 
-- Stable alias generation and persistence using hashed client identifiers.
-- Room join, owner assignment, destroy, leave, status, and TTL rules.
-- Message persistence, retrieval, and Redis publish flow.
-- SSE stream coordination and room-destroy shutdown behavior.
-- Transaction boundaries around room and alias/message mutations.
+- Unit and integration tests for alias, room, message, and SSE behavior.
+- A transactional outbox or equivalent delivery guarantee for message persistence plus Redis publish.
+- Redis-based room destroy events so SSE streams close immediately without relying on periodic status checks.
+- Expired-room cleanup and operational jobs.
+- Friendly alias generation rules if product wants human-readable names instead of deterministic technical aliases.
 
-The database schema, repositories, Redis pub/sub adapter, HTTP handlers, validation, error mapping, middleware, and app wiring are ready for those implementations.
+The database schema, repositories, Redis pub/sub adapter, HTTP handlers, validation, error mapping, middleware, and app wiring are ready for those follow-up implementations.

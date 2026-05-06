@@ -155,11 +155,17 @@ func (r *RoomRepository) AddMember(ctx context.Context, member *domain.RoomMembe
 		model.JoinedAt = time.Now().UTC()
 	}
 
-	if err := r.db.WithContext(ctx).Create(&model).Error; err != nil {
-		return domain.WrapAppError(domain.ErrDependency, "failed to add room member", err)
+	result := r.db.WithContext(ctx).Clauses(clause.OnConflict{
+		Columns:   []clause.Column{{Name: "room_id"}, {Name: "identifier_hash"}},
+		DoNothing: true,
+	}).Create(&model)
+	if result.Error != nil {
+		return domain.WrapAppError(domain.ErrDependency, "failed to add room member", result.Error)
 	}
 
-	*member = modelToRoomMember(model)
+	if result.RowsAffected > 0 {
+		*member = modelToRoomMember(model)
+	}
 	return nil
 }
 
