@@ -14,6 +14,11 @@ type MessageUseCase struct {
 	rooms        domain.RoomRepository
 	aliasUseCase *AliasUseCase
 	pubSub       domain.MessagePubSub
+	logger       messageLogger
+}
+
+type messageLogger interface {
+	WarnContext(ctx context.Context, msg string, args ...any)
 }
 
 type CreateMessageInput struct {
@@ -40,12 +45,14 @@ func NewMessageUseCase(
 	rooms domain.RoomRepository,
 	aliasUseCase *AliasUseCase,
 	pubSub domain.MessagePubSub,
+	logger messageLogger,
 ) *MessageUseCase {
 	return &MessageUseCase{
 		messages:     messages,
 		rooms:        rooms,
 		aliasUseCase: aliasUseCase,
 		pubSub:       pubSub,
+		logger:       logger,
 	}
 }
 
@@ -89,8 +96,12 @@ func (u *MessageUseCase) CreateMessage(ctx context.Context, input CreateMessageI
 	if err := u.messages.Create(ctx, message); err != nil {
 		return nil, err
 	}
-	if err := u.pubSub.PublishMessage(ctx, room.RoomID, *message); err != nil {
-		return nil, err
+	if err := u.pubSub.PublishMessage(ctx, room.RoomID, *message); err != nil && u.logger != nil {
+		u.logger.WarnContext(ctx, "failed to publish message event",
+			"room_id", room.RoomID,
+			"message_id", message.ID,
+			"error", err,
+		)
 	}
 
 	return toMessageOutput(*message), nil
@@ -143,10 +154,17 @@ func (u *MessageUseCase) StreamMessages(ctx context.Context, roomID string) (<-c
 			_ = subscription.Close()
 		}()
 
+		roomStatusTicker := time.NewTicker(5 * time.Second)
+		defer roomStatusTicker.Stop()
+
 		for {
 			select {
 			case <-ctx.Done():
 				return
+			case <-roomStatusTicker.C:
+				if _, err := u.ensureActiveRoom(ctx, roomID); err != nil {
+					return
+				}
 			case message, ok := <-subscription.Messages():
 				if !ok {
 					return

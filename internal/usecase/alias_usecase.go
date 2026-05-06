@@ -51,7 +51,7 @@ func (u *AliasUseCase) GetOrCreateAlias(ctx context.Context, input GetAliasInput
 	clientAlias := &domain.ClientAlias{
 		RoomID:         roomID,
 		IdentifierHash: identifierHash,
-		Alias:          generateClientAlias(identifierHash),
+		Alias:          generateClientAlias(roomID, identifierHash),
 	}
 	if err := u.aliases.Create(ctx, clientAlias); err != nil {
 		alias, findErr := u.aliases.Find(ctx, roomID, identifierHash)
@@ -64,12 +64,13 @@ func (u *AliasUseCase) GetOrCreateAlias(ctx context.Context, input GetAliasInput
 	return &GetAliasOutput{Alias: clientAlias.Alias}, nil
 }
 
-func generateClientAlias(identifierHash string) string {
+func generateClientAlias(roomID string, identifierHash string) string {
 	const aliasPrefixLength = 8
 
-	if len(identifierHash) < aliasPrefixLength {
-		return fmt.Sprintf("Client-%s", strings.ToUpper(identifierHash))
+	aliasSeed := idgen.HashIdentifier(roomID + ":" + identifierHash)
+	if len(aliasSeed) < aliasPrefixLength {
+		return fmt.Sprintf("Client-%s", strings.ToUpper(aliasSeed))
 	}
 
-	return fmt.Sprintf("Client-%s", strings.ToUpper(identifierHash[:aliasPrefixLength]))
+	return fmt.Sprintf("Client-%s", strings.ToUpper(aliasSeed[:aliasPrefixLength]))
 }

@@ -38,7 +38,7 @@ func NewApp(ctx context.Context, cfg *config.Config, log *slog.Logger) (*App, er
 
 	aliasUseCase := usecase.NewAliasUseCase(aliasRepo)
 	roomUseCase := usecase.NewRoomUseCase(roomRepo, messageRepo, cfg.RoomDefaultTTL)
-	messageUseCase := usecase.NewMessageUseCase(messageRepo, roomRepo, aliasUseCase, pubSub)
+	messageUseCase := usecase.NewMessageUseCase(messageRepo, roomRepo, aliasUseCase, pubSub, log)
 
 	handler := httpdelivery.NewRouter(httpdelivery.RouterDependencies{
 		Config:         cfg,
