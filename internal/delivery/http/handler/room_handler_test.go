@@ -22,7 +22,7 @@ func TestRoomHandlerAction(t *testing.T) {
 		t.Parallel()
 
 		rooms := newHandlerRoomRepository()
-		messages := newHandlerMessageRepository()
+		messages := newHandlerRoomMessageRepository()
 		handler := NewRoomHandler(usecase.NewRoomUseCase(rooms, messages, 24*time.Hour), appvalidator.New())
 
 		recorder := executeRoomActionRequest(t, handler, `{"action":"join","identifier":"client-local-storage-id","roomId":"room-a"}`)
@@ -60,7 +60,7 @@ func TestRoomHandlerAction(t *testing.T) {
 		t.Parallel()
 
 		rooms := newHandlerRoomRepository()
-		messages := newHandlerMessageRepository()
+		messages := newHandlerRoomMessageRepository()
 		seedJoinedRoom(t, rooms, "room-a", "owner-id", false)
 		handler := NewRoomHandler(usecase.NewRoomUseCase(rooms, messages, 24*time.Hour), appvalidator.New())
 
@@ -91,7 +91,7 @@ func TestRoomHandlerAction(t *testing.T) {
 		t.Parallel()
 
 		rooms := newHandlerRoomRepository()
-		messages := newHandlerMessageRepository()
+		messages := newHandlerRoomMessageRepository()
 		seedJoinedRoom(t, rooms, "room-a", "owner-id", true)
 		handler := NewRoomHandler(usecase.NewRoomUseCase(rooms, messages, 24*time.Hour), appvalidator.New())
 
@@ -117,7 +117,7 @@ func TestRoomHandlerAction(t *testing.T) {
 		t.Parallel()
 
 		rooms := newHandlerRoomRepository()
-		messages := newHandlerMessageRepository()
+		messages := newHandlerRoomMessageRepository()
 		seedExpiredRoom(t, rooms, "room-a", "owner-id")
 		handler := NewRoomHandler(usecase.NewRoomUseCase(rooms, messages, 24*time.Hour), appvalidator.New())
 
@@ -133,7 +133,7 @@ func TestRoomHandlerAction(t *testing.T) {
 		t.Parallel()
 
 		rooms := newHandlerRoomRepository()
-		messages := newHandlerMessageRepository()
+		messages := newHandlerRoomMessageRepository()
 		seedJoinedRoom(t, rooms, "room-a", "client-local-storage-id", false)
 		handler := NewRoomHandler(usecase.NewRoomUseCase(rooms, messages, 24*time.Hour), appvalidator.New())
 
@@ -158,7 +158,7 @@ func TestRoomHandlerAction(t *testing.T) {
 		t.Parallel()
 
 		rooms := newHandlerRoomRepository()
-		messages := newHandlerMessageRepository()
+		messages := newHandlerRoomMessageRepository()
 		seedJoinedRoom(t, rooms, "room-a", "owner-id", false)
 		rooms.members[handlerRoomMemberKey("room-a", idgen.HashIdentifier("member-id"))] = domain.RoomMember{
 			RoomID:         "room-a",
@@ -181,7 +181,7 @@ func TestRoomHandlerAction(t *testing.T) {
 	t.Run("destroy returns 404 when room does not exist", func(t *testing.T) {
 		t.Parallel()
 
-		handler := NewRoomHandler(usecase.NewRoomUseCase(newHandlerRoomRepository(), newHandlerMessageRepository(), 24*time.Hour), appvalidator.New())
+		handler := NewRoomHandler(usecase.NewRoomUseCase(newHandlerRoomRepository(), newHandlerRoomMessageRepository(), 24*time.Hour), appvalidator.New())
 		recorder := executeRoomActionRequest(t, handler, `{"action":"destroy","identifier":"owner-id","roomId":"missing-room"}`)
 		if recorder.Code != http.StatusNotFound {
 			t.Fatalf("expected status 404, got %d with body %s", recorder.Code, recorder.Body.String())
@@ -194,7 +194,7 @@ func TestRoomHandlerAction(t *testing.T) {
 		t.Parallel()
 
 		rooms := newHandlerRoomRepository()
-		messages := newHandlerMessageRepository()
+		messages := newHandlerRoomMessageRepository()
 		seedExpiredRoom(t, rooms, "room-a", "owner-id")
 		handler := NewRoomHandler(usecase.NewRoomUseCase(rooms, messages, 24*time.Hour), appvalidator.New())
 
@@ -210,7 +210,7 @@ func TestRoomHandlerAction(t *testing.T) {
 		t.Parallel()
 
 		rooms := newHandlerRoomRepository()
-		messages := newHandlerMessageRepository()
+		messages := newHandlerRoomMessageRepository()
 		seedJoinedRoom(t, rooms, "room-a", "client-local-storage-id", false)
 		handler := NewRoomHandler(usecase.NewRoomUseCase(rooms, messages, 24*time.Hour), appvalidator.New())
 
@@ -236,7 +236,7 @@ func TestRoomHandlerAction(t *testing.T) {
 	t.Run("leave returns 404 when room does not exist", func(t *testing.T) {
 		t.Parallel()
 
-		handler := NewRoomHandler(usecase.NewRoomUseCase(newHandlerRoomRepository(), newHandlerMessageRepository(), 24*time.Hour), appvalidator.New())
+		handler := NewRoomHandler(usecase.NewRoomUseCase(newHandlerRoomRepository(), newHandlerRoomMessageRepository(), 24*time.Hour), appvalidator.New())
 		recorder := executeRoomActionRequest(t, handler, `{"action":"leave","identifier":"member-id","roomId":"missing-room"}`)
 		if recorder.Code != http.StatusNotFound {
 			t.Fatalf("expected status 404, got %d with body %s", recorder.Code, recorder.Body.String())
@@ -249,7 +249,7 @@ func TestRoomHandlerAction(t *testing.T) {
 		t.Parallel()
 
 		rooms := newHandlerRoomRepository()
-		messages := newHandlerMessageRepository()
+		messages := newHandlerRoomMessageRepository()
 		seedExpiredRoom(t, rooms, "room-a", "member-id")
 		handler := NewRoomHandler(usecase.NewRoomUseCase(rooms, messages, 24*time.Hour), appvalidator.New())
 
@@ -264,7 +264,7 @@ func TestRoomHandlerAction(t *testing.T) {
 	t.Run("returns 400 for invalid action requests", func(t *testing.T) {
 		t.Parallel()
 
-		handler := NewRoomHandler(usecase.NewRoomUseCase(newHandlerRoomRepository(), newHandlerMessageRepository(), 24*time.Hour), appvalidator.New())
+		handler := NewRoomHandler(usecase.NewRoomUseCase(newHandlerRoomRepository(), newHandlerRoomMessageRepository(), 24*time.Hour), appvalidator.New())
 		tests := []struct {
 			name string
 			body string
@@ -308,7 +308,7 @@ func TestRoomHandlerStatus(t *testing.T) {
 		t.Parallel()
 
 		rooms := newHandlerRoomRepository()
-		messages := newHandlerMessageRepository()
+		messages := newHandlerRoomMessageRepository()
 		expiresAt := time.Date(2026, time.January, 2, 3, 4, 5, 0, time.UTC)
 		rooms.rooms["room-a"] = domain.Room{
 			RoomID:              "room-a",
@@ -349,7 +349,7 @@ func TestRoomHandlerStatus(t *testing.T) {
 		t.Parallel()
 
 		rooms := newHandlerRoomRepository()
-		messages := newHandlerMessageRepository()
+		messages := newHandlerRoomMessageRepository()
 		rooms.rooms["room-a"] = domain.Room{
 			RoomID:              "room-a",
 			OwnerIdentifierHash: idgen.HashIdentifier("client-local-storage-id"),
@@ -375,7 +375,7 @@ func TestRoomHandlerStatus(t *testing.T) {
 	t.Run("returns 404 when room does not exist", func(t *testing.T) {
 		t.Parallel()
 
-		handler := NewRoomHandler(usecase.NewRoomUseCase(newHandlerRoomRepository(), newHandlerMessageRepository(), 24*time.Hour), appvalidator.New())
+		handler := NewRoomHandler(usecase.NewRoomUseCase(newHandlerRoomRepository(), newHandlerRoomMessageRepository(), 24*time.Hour), appvalidator.New())
 		recorder := executeRoomStatusRequest(t, handler, "missing-room")
 		if recorder.Code != http.StatusNotFound {
 			t.Fatalf("expected status 404, got %d with body %s", recorder.Code, recorder.Body.String())
@@ -387,7 +387,7 @@ func TestRoomHandlerStatus(t *testing.T) {
 	t.Run("returns 400 when roomId query is missing", func(t *testing.T) {
 		t.Parallel()
 
-		handler := NewRoomHandler(usecase.NewRoomUseCase(newHandlerRoomRepository(), newHandlerMessageRepository(), 24*time.Hour), appvalidator.New())
+		handler := NewRoomHandler(usecase.NewRoomUseCase(newHandlerRoomRepository(), newHandlerRoomMessageRepository(), 24*time.Hour), appvalidator.New())
 		recorder := executeRoomStatusRequest(t, handler, "")
 		if recorder.Code != http.StatusBadRequest {
 			t.Fatalf("expected status 400, got %d with body %s", recorder.Code, recorder.Body.String())
@@ -606,25 +606,25 @@ func handlerRoomMemberKey(roomID string, identifierHash string) string {
 	return roomID + "\x00" + identifierHash
 }
 
-type handlerMessageRepository struct {
+type handlerRoomMessageRepository struct {
 	counts map[string]int64
 }
 
-func newHandlerMessageRepository() *handlerMessageRepository {
-	return &handlerMessageRepository{
+func newHandlerRoomMessageRepository() *handlerRoomMessageRepository {
+	return &handlerRoomMessageRepository{
 		counts: map[string]int64{},
 	}
 }
 
-func (r *handlerMessageRepository) Create(ctx context.Context, message *domain.Message) error {
+func (r *handlerRoomMessageRepository) Create(ctx context.Context, message *domain.Message) error {
 	r.counts[message.RoomID]++
 	return nil
 }
 
-func (r *handlerMessageRepository) ListByRoomID(ctx context.Context, roomID string) ([]domain.Message, error) {
+func (r *handlerRoomMessageRepository) ListByRoomID(ctx context.Context, roomID string) ([]domain.Message, error) {
 	return nil, nil
 }
 
-func (r *handlerMessageRepository) CountByRoomID(ctx context.Context, roomID string) (int64, error) {
+func (r *handlerRoomMessageRepository) CountByRoomID(ctx context.Context, roomID string) (int64, error) {
 	return r.counts[roomID], nil
 }

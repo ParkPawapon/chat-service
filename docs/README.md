@@ -571,6 +571,7 @@ REDIS_PASSWORD
 REDIS_DB
 CORS_ALLOWED_ORIGINS
 ROOM_DEFAULT_TTL_MINUTES
+MAX_REQUEST_BODY_BYTES
 ```
 
 Rules:
@@ -593,6 +594,7 @@ Use environment variables for:
 - Application `REDIS_ADDR`
 - CORS origins
 - Room TTL
+- Maximum HTTP request body size
 
 Local Docker Compose may read these values from a local `.env` file, but the real `.env` file must never be committed. Keep only `.env.example` in Git.
 

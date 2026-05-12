@@ -2,8 +2,8 @@ package dto
 
 type RoomActionRequest struct {
 	Action     string `json:"action" validate:"required,oneof=join destroy leave"`
-	Identifier string `json:"identifier" validate:"required"`
-	RoomID     string `json:"roomId" validate:"required"`
+	Identifier string `json:"identifier" validate:"required,max=512"`
+	RoomID     string `json:"roomId" validate:"required,max=128"`
 }
 
 type JoinRoomResponse struct {
