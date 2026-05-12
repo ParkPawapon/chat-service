@@ -3,7 +3,6 @@ package usecase
 import (
 	"context"
 	"errors"
-	"strings"
 	"time"
 
 	"chat-service/internal/domain"
@@ -183,9 +182,9 @@ func (u *RoomUseCase) LeaveRoom(ctx context.Context, input RoomActionInput) (*Le
 }
 
 func (u *RoomUseCase) GetStatus(ctx context.Context, roomID string) (*RoomStatusOutput, error) {
-	roomID = strings.TrimSpace(roomID)
-	if roomID == "" {
-		return nil, domain.NewAppError(domain.ErrInvalidInput, "roomId is required")
+	roomID, err := normalizeRoomID(roomID)
+	if err != nil {
+		return nil, err
 	}
 
 	room, err := u.rooms.FindByRoomID(ctx, roomID)
@@ -208,14 +207,14 @@ func (u *RoomUseCase) GetStatus(ctx context.Context, roomID string) (*RoomStatus
 }
 
 func normalizeRoomActionInput(input RoomActionInput) (string, string, error) {
-	roomID := strings.TrimSpace(input.RoomID)
-	if roomID == "" {
-		return "", "", domain.NewAppError(domain.ErrInvalidInput, "roomId is required")
+	roomID, err := normalizeRoomID(input.RoomID)
+	if err != nil {
+		return "", "", err
 	}
 
-	identifier := strings.TrimSpace(input.Identifier)
-	if identifier == "" {
-		return "", "", domain.NewAppError(domain.ErrInvalidInput, "identifier is required")
+	identifier, err := normalizeIdentifier(input.Identifier)
+	if err != nil {
+		return "", "", err
 	}
 
 	return roomID, idgen.HashIdentifier(identifier), nil

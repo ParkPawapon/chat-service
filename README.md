@@ -4,7 +4,7 @@ Backend scaffold for the chat system. This service is intentionally focused on t
 
 ## Stack
 
-- Go 1.25.9
+- Go 1.25.10
 - Chi HTTP router
 - GORM
 - PostgreSQL
@@ -56,6 +56,7 @@ Required variables:
 | `REDIS_DB` | Redis database number |
 | `CORS_ALLOWED_ORIGINS` | Comma-separated allowed browser origins |
 | `ROOM_DEFAULT_TTL_MINUTES` | Default room lifetime in minutes |
+| `MAX_REQUEST_BODY_BYTES` | Maximum accepted HTTP request body size in bytes |
 | `POSTGRES_USER` | Local Docker Compose PostgreSQL user |
 | `POSTGRES_PASSWORD` | Local Docker Compose PostgreSQL password |
 | `POSTGRES_DB` | Local Docker Compose PostgreSQL database |

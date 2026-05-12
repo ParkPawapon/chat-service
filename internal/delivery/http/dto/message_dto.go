@@ -1,9 +1,9 @@
 package dto
 
 type CreateMessageRequest struct {
-	Identifier string `json:"identifier" validate:"required"`
-	RoomID     string `json:"roomId" validate:"required"`
-	Body       string `json:"body" validate:"required"`
+	Identifier string `json:"identifier" validate:"required,max=512"`
+	RoomID     string `json:"roomId" validate:"required,max=128"`
+	Body       string `json:"body" validate:"required,max=4096"`
 }
 
 type MessageResponse struct {

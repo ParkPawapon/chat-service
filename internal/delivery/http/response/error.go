@@ -80,6 +80,8 @@ func validationMessage(err validator.FieldError) string {
 		return "is required"
 	case "oneof":
 		return "has an unsupported value"
+	case "max":
+		return "is too long"
 	default:
 		return "is invalid"
 	}
@@ -92,13 +94,24 @@ func DecodeJSON(r *http.Request, target any) error {
 	decoder.DisallowUnknownFields()
 
 	if err := decoder.Decode(target); err != nil {
-		return domain.WrapAppError(domain.ErrInvalidInput, "invalid JSON request body", err)
+		return decodeJSONError(err)
 	}
 
 	var extra any
-	if err := decoder.Decode(&extra); !errors.Is(err, io.EOF) {
-		return domain.NewAppError(domain.ErrInvalidInput, "request body must contain a single JSON object")
+	if err := decoder.Decode(&extra); err != nil {
+		if errors.Is(err, io.EOF) {
+			return nil
+		}
+		return decodeJSONError(err)
 	}
 
-	return nil
+	return domain.NewAppError(domain.ErrInvalidInput, "request body must contain a single JSON object")
+}
+
+func decodeJSONError(err error) error {
+	var maxBytesErr *http.MaxBytesError
+	if errors.As(err, &maxBytesErr) {
+		return domain.NewAppError(domain.ErrInvalidInput, "request body is too large")
+	}
+	return domain.WrapAppError(domain.ErrInvalidInput, "invalid JSON request body", err)
 }

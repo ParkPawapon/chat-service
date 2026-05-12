@@ -26,6 +26,8 @@ func NewRouter(deps RouterDependencies) http.Handler {
 
 	r.Use(middleware.RequestID)
 	r.Use(middleware.Recover(deps.Logger))
+	r.Use(middleware.SecurityHeaders)
+	r.Use(middleware.MaxBodyBytes(deps.Config.MaxRequestBodyBytes))
 	r.Use(middleware.CORS(deps.Config.CORSAllowedOrigins))
 	r.Use(middleware.Logger(deps.Logger))
 

@@ -41,6 +41,7 @@ services:
       REDIS_DB: ${REDIS_DB:?REDIS_DB is required}
       CORS_ALLOWED_ORIGINS: ${CORS_ALLOWED_ORIGINS:?CORS_ALLOWED_ORIGINS is required}
       ROOM_DEFAULT_TTL_MINUTES: ${ROOM_DEFAULT_TTL_MINUTES:?ROOM_DEFAULT_TTL_MINUTES is required}
+      MAX_REQUEST_BODY_BYTES: ${MAX_REQUEST_BODY_BYTES:?MAX_REQUEST_BODY_BYTES is required}
     ports:
       - "${APP_PORT:?APP_PORT is required}:${APP_PORT:?APP_PORT is required}"
     depends_on:

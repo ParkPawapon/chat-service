@@ -2,7 +2,6 @@ package usecase
 
 import (
 	"context"
-	"strings"
 	"time"
 
 	"chat-service/internal/domain"
@@ -57,19 +56,19 @@ func NewMessageUseCase(
 }
 
 func (u *MessageUseCase) CreateMessage(ctx context.Context, input CreateMessageInput) (*MessageOutput, error) {
-	roomID := strings.TrimSpace(input.RoomID)
-	if roomID == "" {
-		return nil, domain.NewAppError(domain.ErrInvalidInput, "roomId is required")
+	roomID, err := normalizeRoomID(input.RoomID)
+	if err != nil {
+		return nil, err
 	}
 
-	identifier := strings.TrimSpace(input.Identifier)
-	if identifier == "" {
-		return nil, domain.NewAppError(domain.ErrInvalidInput, "identifier is required")
+	identifier, err := normalizeIdentifier(input.Identifier)
+	if err != nil {
+		return nil, err
 	}
 
-	body := strings.TrimSpace(input.Body)
-	if body == "" {
-		return nil, domain.NewAppError(domain.ErrInvalidInput, "body is required")
+	body, err := normalizeMessageBody(input.Body)
+	if err != nil {
+		return nil, err
 	}
 
 	room, err := u.ensureActiveRoom(ctx, roomID)
@@ -108,9 +107,9 @@ func (u *MessageUseCase) CreateMessage(ctx context.Context, input CreateMessageI
 }
 
 func (u *MessageUseCase) ListMessages(ctx context.Context, roomID string) (*ListMessagesOutput, error) {
-	roomID = strings.TrimSpace(roomID)
-	if roomID == "" {
-		return nil, domain.NewAppError(domain.ErrInvalidInput, "roomId is required")
+	roomID, err := normalizeRoomID(roomID)
+	if err != nil {
+		return nil, err
 	}
 
 	if _, err := u.ensureActiveRoom(ctx, roomID); err != nil {
@@ -133,9 +132,9 @@ func (u *MessageUseCase) ListMessages(ctx context.Context, roomID string) (*List
 }
 
 func (u *MessageUseCase) StreamMessages(ctx context.Context, roomID string) (<-chan domain.Message, error) {
-	roomID = strings.TrimSpace(roomID)
-	if roomID == "" {
-		return nil, domain.NewAppError(domain.ErrInvalidInput, "roomId is required")
+	roomID, err := normalizeRoomID(roomID)
+	if err != nil {
+		return nil, err
 	}
 
 	if _, err := u.ensureActiveRoom(ctx, roomID); err != nil {

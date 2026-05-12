@@ -18,7 +18,7 @@ func TestRoomUseCaseJoinRoom(t *testing.T) {
 	t.Run("first join creates the room owner and stores only hashed identifiers", func(t *testing.T) {
 		t.Parallel()
 
-		rooms := newMemoryRoomRepository()
+		rooms := newRoomMemoryRoomRepository()
 		useCase := NewRoomUseCase(rooms, newMemoryMessageRepository(), 24*time.Hour)
 
 		output, err := useCase.JoinRoom(ctx, RoomActionInput{
@@ -52,8 +52,8 @@ func TestRoomUseCaseJoinRoom(t *testing.T) {
 	t.Run("later join returns non-owner and adds a member", func(t *testing.T) {
 		t.Parallel()
 
-		rooms := newMemoryRoomRepository()
-		seedRoomMember(t, rooms, "room-a", "owner-id", false, false)
+		rooms := newRoomMemoryRoomRepository()
+		seedRoomUseCaseMember(t, rooms, "room-a", "owner-id", false, false)
 		useCase := NewRoomUseCase(rooms, newMemoryMessageRepository(), 24*time.Hour)
 
 		output, err := useCase.JoinRoom(ctx, RoomActionInput{
@@ -79,8 +79,8 @@ func TestRoomUseCaseJoinRoom(t *testing.T) {
 	t.Run("destroyed room join returns destroyed state", func(t *testing.T) {
 		t.Parallel()
 
-		rooms := newMemoryRoomRepository()
-		seedRoomMember(t, rooms, "room-a", "owner-id", true, false)
+		rooms := newRoomMemoryRoomRepository()
+		seedRoomUseCaseMember(t, rooms, "room-a", "owner-id", true, false)
 		useCase := NewRoomUseCase(rooms, newMemoryMessageRepository(), 24*time.Hour)
 
 		output, err := useCase.JoinRoom(ctx, RoomActionInput{
@@ -101,8 +101,8 @@ func TestRoomUseCaseJoinRoom(t *testing.T) {
 	t.Run("reactivates a member who had left earlier", func(t *testing.T) {
 		t.Parallel()
 
-		rooms := newMemoryRoomRepository()
-		seedRoomMember(t, rooms, "room-a", "member-id", false, true)
+		rooms := newRoomMemoryRoomRepository()
+		seedRoomUseCaseMember(t, rooms, "room-a", "member-id", false, true)
 		useCase := NewRoomUseCase(rooms, newMemoryMessageRepository(), 24*time.Hour)
 
 		output, err := useCase.JoinRoom(ctx, RoomActionInput{
@@ -126,7 +126,7 @@ func TestRoomUseCaseJoinRoom(t *testing.T) {
 
 		identifierHash := idgen.HashIdentifier("member-id")
 		findCalls := 0
-		repo := &scriptedRoomRepository{
+		repo := &roomScriptedRoomRepository{
 			findByRoomIDFunc: func(ctx context.Context, roomID string) (*domain.Room, error) {
 				findCalls++
 				if findCalls == 1 {
@@ -175,7 +175,7 @@ func TestRoomUseCaseJoinRoom(t *testing.T) {
 	t.Run("returns gone when room has expired", func(t *testing.T) {
 		t.Parallel()
 
-		repo := &scriptedRoomRepository{
+		repo := &roomScriptedRoomRepository{
 			findByRoomIDFunc: func(ctx context.Context, roomID string) (*domain.Room, error) {
 				return &domain.Room{
 					RoomID:              roomID,
@@ -198,7 +198,7 @@ func TestRoomUseCaseJoinRoom(t *testing.T) {
 		t.Parallel()
 
 		dependencyErr := domain.NewAppError(domain.ErrDependency, "room repository unavailable")
-		repo := &scriptedRoomRepository{
+		repo := &roomScriptedRoomRepository{
 			findByRoomIDFunc: func(ctx context.Context, roomID string) (*domain.Room, error) {
 				return nil, dependencyErr
 			},
@@ -216,7 +216,7 @@ func TestRoomUseCaseJoinRoom(t *testing.T) {
 	t.Run("validates required input", func(t *testing.T) {
 		t.Parallel()
 
-		useCase := NewRoomUseCase(newMemoryRoomRepository(), newMemoryMessageRepository(), 24*time.Hour)
+		useCase := NewRoomUseCase(newRoomMemoryRoomRepository(), newMemoryMessageRepository(), 24*time.Hour)
 		tests := []struct {
 			name  string
 			input RoomActionInput
@@ -249,8 +249,8 @@ func TestRoomUseCaseDestroyRoom(t *testing.T) {
 	t.Run("owner can destroy an active room", func(t *testing.T) {
 		t.Parallel()
 
-		rooms := newMemoryRoomRepository()
-		seedRoomMember(t, rooms, "room-a", "owner-id", false, false)
+		rooms := newRoomMemoryRoomRepository()
+		seedRoomUseCaseMember(t, rooms, "room-a", "owner-id", false, false)
 		useCase := NewRoomUseCase(rooms, newMemoryMessageRepository(), 24*time.Hour)
 
 		output, err := useCase.DestroyRoom(ctx, RoomActionInput{
@@ -271,8 +271,8 @@ func TestRoomUseCaseDestroyRoom(t *testing.T) {
 	t.Run("non-owner destroy returns forbidden", func(t *testing.T) {
 		t.Parallel()
 
-		rooms := newMemoryRoomRepository()
-		seedRoomMember(t, rooms, "room-a", "owner-id", false, false)
+		rooms := newRoomMemoryRoomRepository()
+		seedRoomUseCaseMember(t, rooms, "room-a", "owner-id", false, false)
 		useCase := NewRoomUseCase(rooms, newMemoryMessageRepository(), 24*time.Hour)
 
 		_, err := useCase.DestroyRoom(ctx, RoomActionInput{
@@ -287,7 +287,7 @@ func TestRoomUseCaseDestroyRoom(t *testing.T) {
 	t.Run("expired room destroy returns gone", func(t *testing.T) {
 		t.Parallel()
 
-		repo := &scriptedRoomRepository{
+		repo := &roomScriptedRoomRepository{
 			findByRoomIDFunc: func(ctx context.Context, roomID string) (*domain.Room, error) {
 				return &domain.Room{
 					RoomID:              roomID,
@@ -309,8 +309,8 @@ func TestRoomUseCaseDestroyRoom(t *testing.T) {
 	t.Run("destroy returns success when room is already destroyed", func(t *testing.T) {
 		t.Parallel()
 
-		rooms := newMemoryRoomRepository()
-		seedRoomMember(t, rooms, "room-a", "owner-id", true, false)
+		rooms := newRoomMemoryRoomRepository()
+		seedRoomUseCaseMember(t, rooms, "room-a", "owner-id", true, false)
 
 		output, err := NewRoomUseCase(rooms, newMemoryMessageRepository(), 24*time.Hour).DestroyRoom(ctx, RoomActionInput{
 			Identifier: "owner-id",
@@ -333,8 +333,8 @@ func TestRoomUseCaseLeaveRoom(t *testing.T) {
 	t.Run("leave marks the member as left", func(t *testing.T) {
 		t.Parallel()
 
-		rooms := newMemoryRoomRepository()
-		seedRoomMember(t, rooms, "room-a", "member-id", false, false)
+		rooms := newRoomMemoryRoomRepository()
+		seedRoomUseCaseMember(t, rooms, "room-a", "member-id", false, false)
 		useCase := NewRoomUseCase(rooms, newMemoryMessageRepository(), 24*time.Hour)
 
 		output, err := useCase.LeaveRoom(ctx, RoomActionInput{
@@ -357,8 +357,8 @@ func TestRoomUseCaseLeaveRoom(t *testing.T) {
 	t.Run("returns success when member had already left", func(t *testing.T) {
 		t.Parallel()
 
-		rooms := newMemoryRoomRepository()
-		seedRoomMember(t, rooms, "room-a", "member-id", false, true)
+		rooms := newRoomMemoryRoomRepository()
+		seedRoomUseCaseMember(t, rooms, "room-a", "member-id", false, true)
 
 		output, err := NewRoomUseCase(rooms, newMemoryMessageRepository(), 24*time.Hour).LeaveRoom(ctx, RoomActionInput{
 			Identifier: "member-id",
@@ -375,7 +375,7 @@ func TestRoomUseCaseLeaveRoom(t *testing.T) {
 	t.Run("expired room leave returns gone", func(t *testing.T) {
 		t.Parallel()
 
-		repo := &scriptedRoomRepository{
+		repo := &roomScriptedRoomRepository{
 			findByRoomIDFunc: func(ctx context.Context, roomID string) (*domain.Room, error) {
 				return &domain.Room{
 					RoomID:              roomID,
@@ -403,7 +403,7 @@ func TestRoomUseCaseGetStatus(t *testing.T) {
 	t.Run("returns room status with message count", func(t *testing.T) {
 		t.Parallel()
 
-		rooms := newMemoryRoomRepository()
+		rooms := newRoomMemoryRoomRepository()
 		messages := newMemoryMessageRepository()
 		expiresAt := time.Date(2026, time.January, 2, 3, 4, 5, 0, time.UTC)
 		rooms.rooms["room-a"] = domain.Room{
@@ -428,7 +428,7 @@ func TestRoomUseCaseGetStatus(t *testing.T) {
 	t.Run("validates required room id", func(t *testing.T) {
 		t.Parallel()
 
-		_, err := NewRoomUseCase(newMemoryRoomRepository(), newMemoryMessageRepository(), 24*time.Hour).GetStatus(ctx, "   ")
+		_, err := NewRoomUseCase(newRoomMemoryRoomRepository(), newMemoryMessageRepository(), 24*time.Hour).GetStatus(ctx, "   ")
 		if !errors.Is(err, domain.ErrInvalidInput) {
 			t.Fatalf("expected ErrInvalidInput, got %v", err)
 		}
@@ -437,7 +437,7 @@ func TestRoomUseCaseGetStatus(t *testing.T) {
 	t.Run("returns not found when room does not exist", func(t *testing.T) {
 		t.Parallel()
 
-		_, err := NewRoomUseCase(newMemoryRoomRepository(), newMemoryMessageRepository(), 24*time.Hour).GetStatus(ctx, "missing-room")
+		_, err := NewRoomUseCase(newRoomMemoryRoomRepository(), newMemoryMessageRepository(), 24*time.Hour).GetStatus(ctx, "missing-room")
 		if !errors.Is(err, domain.ErrNotFound) {
 			t.Fatalf("expected ErrNotFound, got %v", err)
 		}
@@ -446,7 +446,7 @@ func TestRoomUseCaseGetStatus(t *testing.T) {
 	t.Run("propagates message repository dependency errors", func(t *testing.T) {
 		t.Parallel()
 
-		rooms := newMemoryRoomRepository()
+		rooms := newRoomMemoryRoomRepository()
 		rooms.rooms["room-a"] = domain.Room{
 			RoomID:              "room-a",
 			OwnerIdentifierHash: idgen.HashIdentifier("owner-id"),
@@ -466,7 +466,7 @@ func TestRoomUseCaseGetStatus(t *testing.T) {
 	})
 }
 
-func seedRoomMember(t *testing.T, rooms *memoryRoomRepository, roomID string, identifier string, isDestroyed bool, hasLeft bool) {
+func seedRoomUseCaseMember(t *testing.T, rooms *roomMemoryRoomRepository, roomID string, identifier string, isDestroyed bool, hasLeft bool) {
 	t.Helper()
 
 	identifierHash := idgen.HashIdentifier(identifier)
@@ -488,5 +488,5 @@ func seedRoomMember(t *testing.T, rooms *memoryRoomRepository, roomID string, id
 	}
 
 	rooms.rooms[roomID] = room
-	rooms.members[roomMemberRecordKey(roomID, identifierHash)] = member
+	rooms.members[roomTestMemberRecordKey(roomID, identifierHash)] = member
 }

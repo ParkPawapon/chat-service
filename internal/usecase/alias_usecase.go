@@ -28,14 +28,14 @@ func NewAliasUseCase(aliases domain.AliasRepository) *AliasUseCase {
 }
 
 func (u *AliasUseCase) GetOrCreateAlias(ctx context.Context, input GetAliasInput) (*GetAliasOutput, error) {
-	roomID := strings.TrimSpace(input.RoomID)
-	if roomID == "" {
-		return nil, domain.NewAppError(domain.ErrInvalidInput, "roomId is required")
+	roomID, err := normalizeRoomID(input.RoomID)
+	if err != nil {
+		return nil, err
 	}
 
-	identifier := strings.TrimSpace(input.Identifier)
-	if identifier == "" {
-		return nil, domain.NewAppError(domain.ErrInvalidInput, "identifier is required")
+	identifier, err := normalizeIdentifier(input.Identifier)
+	if err != nil {
+		return nil, err
 	}
 
 	identifierHash := idgen.HashIdentifier(identifier)
