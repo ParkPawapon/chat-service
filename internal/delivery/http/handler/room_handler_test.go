@@ -179,6 +179,31 @@ func TestRoomHandlerAction(t *testing.T) {
 		}
 	})
 
+	t.Run("destroy accepts force for non-owner bypass", func(t *testing.T) {
+		t.Parallel()
+
+		rooms := newHandlerRoomRepository()
+		messages := newHandlerRoomMessageRepository()
+		seedJoinedRoom(t, rooms, "room-a", "owner-id", false)
+		handler := NewRoomHandler(usecase.NewRoomUseCase(rooms, messages, 24*time.Hour), appvalidator.New())
+
+		recorder := executeRoomActionRequest(t, handler, `{"action":"destroy","identifier":"admin-id","roomId":"room-a","force":true}`)
+		if recorder.Code != http.StatusOK {
+			t.Fatalf("expected status 200, got %d with body %s", recorder.Code, recorder.Body.String())
+		}
+
+		var responseBody struct {
+			IsDestroyed bool `json:"isDestroyed"`
+		}
+		decodeRoomResponse(t, recorder, &responseBody)
+		if !responseBody.IsDestroyed {
+			t.Fatal("expected destroy response to report destroyed room")
+		}
+		if !rooms.mustFindRoom(t, "room-a").IsDestroyed {
+			t.Fatal("expected room repository state to be destroyed by force destroy")
+		}
+	})
+
 	t.Run("destroy returns 404 when room does not exist", func(t *testing.T) {
 		t.Parallel()
 

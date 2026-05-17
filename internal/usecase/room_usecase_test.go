@@ -284,6 +284,29 @@ func TestRoomUseCaseDestroyRoom(t *testing.T) {
 		}
 	})
 
+	t.Run("force destroy allows non-owner to bypass owner check", func(t *testing.T) {
+		t.Parallel()
+
+		rooms := newRoomMemoryRoomRepository()
+		seedRoomUseCaseMember(t, rooms, "room-a", "owner-id", false, false)
+		useCase := NewRoomUseCase(rooms, newMemoryMessageRepository(), 24*time.Hour)
+
+		output, err := useCase.DestroyRoom(ctx, RoomActionInput{
+			Identifier: "admin-id",
+			RoomID:     "room-a",
+			Force:      true,
+		})
+		if err != nil {
+			t.Fatalf("DestroyRoom returned error: %v", err)
+		}
+		if !output.IsDestroyed {
+			t.Fatal("expected force destroy output to report destroyed room")
+		}
+		if !rooms.mustFindRoom(t, "room-a").IsDestroyed {
+			t.Fatal("expected room to be marked destroyed by force destroy")
+		}
+	})
+
 	t.Run("expired room destroy returns gone", func(t *testing.T) {
 		t.Parallel()
 

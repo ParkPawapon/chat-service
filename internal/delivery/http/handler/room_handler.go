@@ -34,6 +34,7 @@ func (h *RoomHandler) Action(w http.ResponseWriter, r *http.Request) {
 	input := usecase.RoomActionInput{
 		Identifier: req.Identifier,
 		RoomID:     req.RoomID,
+		Force:      req.Force,
 	}
 
 	switch req.Action {

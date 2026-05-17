@@ -111,9 +111,10 @@ Perform room lifecycle actions through one endpoint: join, destroy, or leave.
 
 ```json
 {
-  "action": "join",
+  "action": "destroy",
   "identifier": "client-local-storage-id",
-  "roomId": "room-a"
+  "roomId": "room-a",
+  "force": true
 }
 ```
 
@@ -122,6 +123,7 @@ Perform room lifecycle actions through one endpoint: join, destroy, or leave.
 | `action` | Yes | `join`, `destroy`, `leave` | Unsupported values are rejected |
 | `identifier` | Yes | 512 chars | Trimmed and hashed before persistence |
 | `roomId` | Yes | 128 chars | Trimmed |
+| `force` | No | boolean | Used only by `destroy`; when `true`, bypasses the owner permission check |
 
 ### Join Success Response
 
@@ -159,7 +161,8 @@ Status: `200 OK`
 - `join` creates the room if it does not exist; the first joiner becomes owner.
 - `join` adds or reactivates a room member when the room is active.
 - `join` on a destroyed room returns `isDestroyed: true` and `isOwner: false`.
-- `destroy` is allowed only for the room owner.
+- `destroy` is allowed for the room owner by default.
+- `destroy` with `force: true` bypasses the owner permission check so an admin flow can destroy the room.
 - `destroy` is idempotent for an already destroyed room.
 - `leave` marks an existing member as left and is idempotent after the member has left.
 - Expired rooms cannot be joined, destroyed, or left.
@@ -167,14 +170,14 @@ Status: `200 OK`
 ### Error Cases
 
 - `400 invalid_request` for invalid JSON, unknown fields, missing fields, unsupported action, empty trimmed values, or length violations.
-- `403 forbidden` when a non-owner attempts `destroy`.
+- `403 forbidden` when a non-owner attempts `destroy` without `force: true`.
 - `404 not_found` when `destroy` or `leave` targets a missing room or missing membership.
 - `410 gone` when the room is expired.
 
 ### Acceptance Criteria
 
 - Correct response shape is returned for each action.
-- Owner-only room destruction is enforced.
+- Owner permission is enforced for normal `destroy`, and `force: true` enables admin bypass.
 - Client identifiers are hashed before persistence.
 
 ## GET /api/v1/rooms/status
