@@ -161,6 +161,8 @@ The current CD workflow publishes a container image only. It does not deploy to 
 - `GET /api/v1/messages?roomId=...`
 - `GET /api/v1/messages/stream?roomId=...`
 
+See [API Endpoint PRD](docs/api-prd.md) for endpoint goals, contracts, business rules, and acceptance criteria.
+
 ## Intentional TODOs
 
 The initial scaffold has been extended with minimal alias, room, and message behavior. The service is still not a complete production chat system. Follow-up endpoint tasks should harden:
