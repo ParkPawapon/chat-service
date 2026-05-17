@@ -18,6 +18,7 @@ type RoomUseCase struct {
 type RoomActionInput struct {
 	Identifier string
 	RoomID     string
+	Force      bool
 }
 
 type JoinRoomOutput struct {
@@ -146,7 +147,7 @@ func (u *RoomUseCase) DestroyRoom(ctx context.Context, input RoomActionInput) (*
 		return nil, err
 	}
 
-	if room.OwnerIdentifierHash != identifierHash {
+	if !input.Force && room.OwnerIdentifierHash != identifierHash {
 		return nil, domain.NewAppError(domain.ErrForbidden, "only the room owner can destroy the room")
 	}
 	if room.ExpiresAt.Before(time.Now().UTC()) {

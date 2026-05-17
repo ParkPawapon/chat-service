@@ -4,6 +4,7 @@ type RoomActionRequest struct {
 	Action     string `json:"action" validate:"required,oneof=join destroy leave"`
 	Identifier string `json:"identifier" validate:"required,max=512"`
 	RoomID     string `json:"roomId" validate:"required,max=128"`
+	Force      bool   `json:"force"`
 }
 
 type JoinRoomResponse struct {
