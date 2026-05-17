@@ -41,6 +41,7 @@ func NewRouter(deps RouterDependencies) http.Handler {
 	r.Route("/api/v1", func(r chi.Router) {
 		r.Post("/client-alias", aliasHandler.GetOrCreate)
 		r.Post("/rooms", roomHandler.Action)
+		r.Get("/rooms", roomHandler.List)
 		r.Get("/rooms/status", roomHandler.Status)
 		r.Post("/messages", messageHandler.Create)
 		r.Get("/messages", messageHandler.List)

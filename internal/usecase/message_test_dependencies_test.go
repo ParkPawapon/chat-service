@@ -35,6 +35,17 @@ func (r *memoryRoomRepository) Create(ctx context.Context, room *domain.Room) er
 	return nil
 }
 
+func (r *memoryRoomRepository) List(ctx context.Context) ([]domain.Room, error) {
+	r.mu.Lock()
+	defer r.mu.Unlock()
+
+	rooms := make([]domain.Room, 0, len(r.rooms))
+	for _, room := range r.rooms {
+		rooms = append(rooms, *cloneRoom(room))
+	}
+	return rooms, nil
+}
+
 func (r *memoryRoomRepository) FindByRoomID(ctx context.Context, roomID string) (*domain.Room, error) {
 	r.mu.Lock()
 	defer r.mu.Unlock()
@@ -125,6 +136,7 @@ func (r *memoryRoomRepository) MarkMemberLeft(ctx context.Context, roomID string
 }
 
 type scriptedRoomRepository struct {
+	listFunc                func(ctx context.Context) ([]domain.Room, error)
 	findByRoomIDFunc        func(ctx context.Context, roomID string) (*domain.Room, error)
 	ensureRoomWithOwnerFunc func(ctx context.Context, room *domain.Room, member *domain.RoomMember) (bool, error)
 	updateFunc              func(ctx context.Context, room *domain.Room) error
@@ -135,6 +147,13 @@ type scriptedRoomRepository struct {
 }
 
 func (r *scriptedRoomRepository) Create(ctx context.Context, room *domain.Room) error { return nil }
+
+func (r *scriptedRoomRepository) List(ctx context.Context) ([]domain.Room, error) {
+	if r.listFunc == nil {
+		return nil, nil
+	}
+	return r.listFunc(ctx)
+}
 
 func (r *scriptedRoomRepository) FindByRoomID(ctx context.Context, roomID string) (*domain.Room, error) {
 	if r.findByRoomIDFunc == nil {

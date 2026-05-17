@@ -2,6 +2,7 @@ package usecase
 
 import (
 	"context"
+	"sort"
 	"sync"
 	"testing"
 	"time"
@@ -31,6 +32,22 @@ func (r *roomMemoryRoomRepository) Create(ctx context.Context, room *domain.Room
 	}
 	r.rooms[room.RoomID] = *cloneRoomForRoomTest(*room)
 	return nil
+}
+
+func (r *roomMemoryRoomRepository) List(ctx context.Context) ([]domain.Room, error) {
+	r.mu.Lock()
+	defer r.mu.Unlock()
+
+	rooms := make([]domain.Room, 0, len(r.rooms))
+	for _, room := range r.rooms {
+		rooms = append(rooms, *cloneRoomForRoomTest(room))
+	}
+
+	sort.Slice(rooms, func(i, j int) bool {
+		return rooms[i].RoomID < rooms[j].RoomID
+	})
+
+	return rooms, nil
 }
 
 func (r *roomMemoryRoomRepository) FindByRoomID(ctx context.Context, roomID string) (*domain.Room, error) {
@@ -187,6 +204,7 @@ func cloneRoomMemberForRoomTest(member domain.RoomMember) *domain.RoomMember {
 }
 
 type roomScriptedRoomRepository struct {
+	listFunc                func(ctx context.Context) ([]domain.Room, error)
 	findByRoomIDFunc        func(ctx context.Context, roomID string) (*domain.Room, error)
 	ensureRoomWithOwnerFunc func(ctx context.Context, room *domain.Room, member *domain.RoomMember) (bool, error)
 	updateFunc              func(ctx context.Context, room *domain.Room) error
@@ -198,6 +216,13 @@ type roomScriptedRoomRepository struct {
 
 func (r *roomScriptedRoomRepository) Create(ctx context.Context, room *domain.Room) error {
 	return nil
+}
+
+func (r *roomScriptedRoomRepository) List(ctx context.Context) ([]domain.Room, error) {
+	if r.listFunc == nil {
+		return nil, nil
+	}
+	return r.listFunc(ctx)
 }
 
 func (r *roomScriptedRoomRepository) FindByRoomID(ctx context.Context, roomID string) (*domain.Room, error) {

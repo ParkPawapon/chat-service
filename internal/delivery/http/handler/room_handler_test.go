@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 	"net/http"
 	"net/http/httptest"
+	"sort"
 	"testing"
 	"time"
 
@@ -405,6 +406,70 @@ func TestRoomHandlerStatus(t *testing.T) {
 	})
 }
 
+func TestRoomHandlerList(t *testing.T) {
+	t.Parallel()
+
+	t.Run("returns all rooms", func(t *testing.T) {
+		t.Parallel()
+
+		rooms := newHandlerRoomRepository()
+		messages := newHandlerRoomMessageRepository()
+		rooms.rooms["room-b"] = domain.Room{
+			RoomID:              "room-b",
+			OwnerIdentifierHash: idgen.HashIdentifier("owner-b"),
+			IsDestroyed:         true,
+			ExpiresAt:           time.Date(2026, time.January, 3, 3, 4, 5, 0, time.UTC),
+			CreatedAt:           time.Date(2026, time.January, 1, 1, 0, 0, 0, time.UTC),
+			UpdatedAt:           time.Date(2026, time.January, 1, 2, 0, 0, 0, time.UTC),
+		}
+		rooms.rooms["room-a"] = domain.Room{
+			RoomID:              "room-a",
+			OwnerIdentifierHash: idgen.HashIdentifier("owner-a"),
+			IsDestroyed:         false,
+			ExpiresAt:           time.Date(2026, time.January, 2, 3, 4, 5, 0, time.UTC),
+			CreatedAt:           time.Date(2025, time.December, 31, 23, 0, 0, 0, time.UTC),
+			UpdatedAt:           time.Date(2026, time.January, 1, 0, 0, 0, 0, time.UTC),
+		}
+
+		handler := NewRoomHandler(usecase.NewRoomUseCase(rooms, messages, 24*time.Hour), appvalidator.New())
+		recorder := executeRoomListRequest(t, handler)
+		if recorder.Code != http.StatusOK {
+			t.Fatalf("expected status 200, got %d with body %s", recorder.Code, recorder.Body.String())
+		}
+
+		var responseBody struct {
+			Rooms []struct {
+				RoomID      string `json:"roomId"`
+				ExpiresAt   string `json:"expiresAt"`
+				IsDestroyed bool   `json:"isDestroyed"`
+				CreatedAt   string `json:"createdAt"`
+				UpdatedAt   string `json:"updatedAt"`
+			} `json:"rooms"`
+			ServerTime string `json:"serverTime"`
+		}
+		decodeRoomResponse(t, recorder, &responseBody)
+
+		if len(responseBody.Rooms) != 2 {
+			t.Fatalf("expected 2 rooms, got %d", len(responseBody.Rooms))
+		}
+		if responseBody.Rooms[0].RoomID != "room-a" {
+			t.Fatalf("expected first room to be room-a, got %q", responseBody.Rooms[0].RoomID)
+		}
+		if responseBody.Rooms[0].ExpiresAt != "2026-01-02T03:04:05.000Z" {
+			t.Fatalf("unexpected first room expiresAt %q", responseBody.Rooms[0].ExpiresAt)
+		}
+		if responseBody.Rooms[1].RoomID != "room-b" {
+			t.Fatalf("expected second room to be room-b, got %q", responseBody.Rooms[1].RoomID)
+		}
+		if !responseBody.Rooms[1].IsDestroyed {
+			t.Fatal("expected second room to be destroyed")
+		}
+		if _, err := time.Parse(time.RFC3339Nano, responseBody.ServerTime); err != nil {
+			t.Fatalf("expected serverTime to be RFC3339 timestamp, got %q", responseBody.ServerTime)
+		}
+	})
+}
+
 func executeRoomActionRequest(t *testing.T, handler *RoomHandler, body string) *httptest.ResponseRecorder {
 	t.Helper()
 
@@ -427,6 +492,15 @@ func executeRoomStatusRequest(t *testing.T, handler *RoomHandler, roomID string)
 	request := httptest.NewRequest(http.MethodGet, target, nil)
 	recorder := httptest.NewRecorder()
 	handler.Status(recorder, request)
+	return recorder
+}
+
+func executeRoomListRequest(t *testing.T, handler *RoomHandler) *httptest.ResponseRecorder {
+	t.Helper()
+
+	request := httptest.NewRequest(http.MethodGet, "/api/v1/rooms", nil)
+	recorder := httptest.NewRecorder()
+	handler.List(recorder, request)
 	return recorder
 }
 
@@ -506,6 +580,19 @@ func (r *handlerRoomRepository) Create(ctx context.Context, room *domain.Room) e
 	copy := *room
 	r.rooms[room.RoomID] = copy
 	return nil
+}
+
+func (r *handlerRoomRepository) List(ctx context.Context) ([]domain.Room, error) {
+	rooms := make([]domain.Room, 0, len(r.rooms))
+	for _, room := range r.rooms {
+		rooms = append(rooms, room)
+	}
+
+	sort.Slice(rooms, func(i, j int) bool {
+		return rooms[i].RoomID < rooms[j].RoomID
+	})
+
+	return rooms, nil
 }
 
 func (r *handlerRoomRepository) FindByRoomID(ctx context.Context, roomID string) (*domain.Room, error) {

@@ -466,6 +466,70 @@ func TestRoomUseCaseGetStatus(t *testing.T) {
 	})
 }
 
+func TestRoomUseCaseListRooms(t *testing.T) {
+	t.Parallel()
+
+	ctx := context.Background()
+
+	t.Run("returns all rooms in room id order", func(t *testing.T) {
+		t.Parallel()
+
+		rooms := newRoomMemoryRoomRepository()
+		rooms.rooms["room-b"] = domain.Room{
+			RoomID:              "room-b",
+			OwnerIdentifierHash: idgen.HashIdentifier("owner-b"),
+			IsDestroyed:         true,
+			ExpiresAt:           time.Date(2026, time.January, 3, 3, 4, 5, 0, time.UTC),
+			CreatedAt:           time.Date(2026, time.January, 1, 1, 0, 0, 0, time.UTC),
+			UpdatedAt:           time.Date(2026, time.January, 1, 2, 0, 0, 0, time.UTC),
+		}
+		rooms.rooms["room-a"] = domain.Room{
+			RoomID:              "room-a",
+			OwnerIdentifierHash: idgen.HashIdentifier("owner-a"),
+			IsDestroyed:         false,
+			ExpiresAt:           time.Date(2026, time.January, 2, 3, 4, 5, 0, time.UTC),
+			CreatedAt:           time.Date(2025, time.December, 31, 23, 0, 0, 0, time.UTC),
+			UpdatedAt:           time.Date(2026, time.January, 1, 0, 0, 0, 0, time.UTC),
+		}
+
+		output, err := NewRoomUseCase(rooms, newMemoryMessageRepository(), 24*time.Hour).ListRooms(ctx)
+		if err != nil {
+			t.Fatalf("ListRooms returned error: %v", err)
+		}
+
+		if len(output.Rooms) != 2 {
+			t.Fatalf("expected 2 rooms, got %d", len(output.Rooms))
+		}
+		if output.Rooms[0].RoomID != "room-a" {
+			t.Fatalf("expected first room to be room-a, got %q", output.Rooms[0].RoomID)
+		}
+		if output.Rooms[1].RoomID != "room-b" {
+			t.Fatalf("expected second room to be room-b, got %q", output.Rooms[1].RoomID)
+		}
+		if !output.Rooms[1].IsDestroyed {
+			t.Fatal("expected second room to be destroyed")
+		}
+		if output.ServerTime.IsZero() {
+			t.Fatal("expected serverTime to be set")
+		}
+	})
+
+	t.Run("propagates repository dependency errors", func(t *testing.T) {
+		t.Parallel()
+
+		repo := &roomScriptedRoomRepository{
+			listFunc: func(ctx context.Context) ([]domain.Room, error) {
+				return nil, domain.NewAppError(domain.ErrDependency, "room repository unavailable")
+			},
+		}
+
+		_, err := NewRoomUseCase(repo, newMemoryMessageRepository(), 24*time.Hour).ListRooms(ctx)
+		if !errors.Is(err, domain.ErrDependency) {
+			t.Fatalf("expected ErrDependency, got %v", err)
+		}
+	})
+}
+
 func seedRoomUseCaseMember(t *testing.T, rooms *roomMemoryRoomRepository, roomID string, identifier string, isDestroyed bool, hasLeft bool) {
 	t.Helper()
 

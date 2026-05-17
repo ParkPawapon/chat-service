@@ -156,6 +156,7 @@ The current CD workflow publishes a container image only. It does not deploy to 
 - `GET /health`
 - `POST /api/v1/client-alias`
 - `POST /api/v1/rooms`
+- `GET /api/v1/rooms`
 - `GET /api/v1/rooms/status?roomId=...`
 - `POST /api/v1/messages`
 - `GET /api/v1/messages?roomId=...`

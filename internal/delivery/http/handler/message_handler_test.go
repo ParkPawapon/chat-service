@@ -390,6 +390,17 @@ func (r *handlerMessageRoomRepository) Create(ctx context.Context, room *domain.
 	return nil
 }
 
+func (r *handlerMessageRoomRepository) List(ctx context.Context) ([]domain.Room, error) {
+	r.mu.Lock()
+	defer r.mu.Unlock()
+
+	rooms := make([]domain.Room, 0, len(r.rooms))
+	for _, room := range r.rooms {
+		rooms = append(rooms, room)
+	}
+	return rooms, nil
+}
+
 func (r *handlerMessageRoomRepository) FindByRoomID(ctx context.Context, roomID string) (*domain.Room, error) {
 	r.mu.Lock()
 	defer r.mu.Unlock()
