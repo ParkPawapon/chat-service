@@ -25,3 +25,16 @@ type RoomStatusResponse struct {
 	MessageCount int64  `json:"messageCount"`
 	ServerTime   string `json:"serverTime"`
 }
+
+type RoomSummaryResponse struct {
+	RoomID      string `json:"roomId"`
+	ExpiresAt   string `json:"expiresAt"`
+	IsDestroyed bool   `json:"isDestroyed"`
+	CreatedAt   string `json:"createdAt"`
+	UpdatedAt   string `json:"updatedAt"`
+}
+
+type ListRoomsResponse struct {
+	Rooms      []RoomSummaryResponse `json:"rooms"`
+	ServerTime string                `json:"serverTime"`
+}

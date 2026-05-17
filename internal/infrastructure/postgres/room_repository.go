@@ -40,6 +40,20 @@ func (r *RoomRepository) Create(ctx context.Context, room *domain.Room) error {
 	return nil
 }
 
+func (r *RoomRepository) List(ctx context.Context) ([]domain.Room, error) {
+	var models []RoomModel
+	if err := r.db.WithContext(ctx).Order("room_id ASC").Find(&models).Error; err != nil {
+		return nil, domain.WrapAppError(domain.ErrDependency, "failed to list rooms", err)
+	}
+
+	rooms := make([]domain.Room, 0, len(models))
+	for _, model := range models {
+		rooms = append(rooms, modelToRoom(model))
+	}
+
+	return rooms, nil
+}
+
 func (r *RoomRepository) FindByRoomID(ctx context.Context, roomID string) (*domain.Room, error) {
 	var model RoomModel
 	if err := r.db.WithContext(ctx).Where("room_id = ?", roomID).First(&model).Error; err != nil {

@@ -40,6 +40,19 @@ type RoomStatusOutput struct {
 	ServerTime   time.Time
 }
 
+type RoomSummaryOutput struct {
+	RoomID      string
+	ExpiresAt   time.Time
+	IsDestroyed bool
+	CreatedAt   time.Time
+	UpdatedAt   time.Time
+}
+
+type ListRoomsOutput struct {
+	Rooms      []RoomSummaryOutput
+	ServerTime time.Time
+}
+
 func NewRoomUseCase(rooms domain.RoomRepository, messages domain.MessageRepository, defaultTTL time.Duration) *RoomUseCase {
 	return &RoomUseCase{
 		rooms:      rooms,
@@ -203,6 +216,29 @@ func (u *RoomUseCase) GetStatus(ctx context.Context, roomID string) (*RoomStatus
 		IsDestroyed:  room.IsDestroyed,
 		MessageCount: messageCount,
 		ServerTime:   now,
+	}, nil
+}
+
+func (u *RoomUseCase) ListRooms(ctx context.Context) (*ListRoomsOutput, error) {
+	rooms, err := u.rooms.List(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	outputRooms := make([]RoomSummaryOutput, 0, len(rooms))
+	for _, room := range rooms {
+		outputRooms = append(outputRooms, RoomSummaryOutput{
+			RoomID:      room.RoomID,
+			ExpiresAt:   room.ExpiresAt,
+			IsDestroyed: room.IsDestroyed,
+			CreatedAt:   room.CreatedAt,
+			UpdatedAt:   room.UpdatedAt,
+		})
+	}
+
+	return &ListRoomsOutput{
+		Rooms:      outputRooms,
+		ServerTime: time.Now().UTC(),
 	}, nil
 }
 

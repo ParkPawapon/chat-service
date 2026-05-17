@@ -86,3 +86,27 @@ func (h *RoomHandler) Status(w http.ResponseWriter, r *http.Request) {
 		ServerTime:   output.ServerTime.UTC().Format(response.ISOTimeLayout),
 	})
 }
+
+func (h *RoomHandler) List(w http.ResponseWriter, r *http.Request) {
+	output, err := h.useCase.ListRooms(r.Context())
+	if err != nil {
+		response.Error(w, err)
+		return
+	}
+
+	rooms := make([]dto.RoomSummaryResponse, 0, len(output.Rooms))
+	for _, room := range output.Rooms {
+		rooms = append(rooms, dto.RoomSummaryResponse{
+			RoomID:      room.RoomID,
+			ExpiresAt:   room.ExpiresAt.UTC().Format(response.ISOTimeLayout),
+			IsDestroyed: room.IsDestroyed,
+			CreatedAt:   room.CreatedAt.UTC().Format(response.ISOTimeLayout),
+			UpdatedAt:   room.UpdatedAt.UTC().Format(response.ISOTimeLayout),
+		})
+	}
+
+	response.JSON(w, http.StatusOK, dto.ListRoomsResponse{
+		Rooms:      rooms,
+		ServerTime: output.ServerTime.UTC().Format(response.ISOTimeLayout),
+	})
+}

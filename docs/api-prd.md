@@ -221,6 +221,45 @@ Status: `200 OK`
 - Returns room destruction state and expiry time.
 - Returns server time so clients can calculate remaining room lifetime.
 
+## GET /api/v1/rooms
+
+### Purpose
+
+Return all rooms for operational views or clients that need the current room list.
+
+### Users
+
+- Internal dashboards or clients fetching all known rooms
+
+### Success Response
+
+Status: `200 OK`
+
+```json
+{
+  "rooms": [
+    {
+      "roomId": "room-a",
+      "expiresAt": "2026-01-02T03:04:05.000Z",
+      "isDestroyed": false,
+      "createdAt": "2026-01-01T03:04:05.000Z",
+      "updatedAt": "2026-01-01T04:04:05.000Z"
+    }
+  ],
+  "serverTime": "2026-01-02T03:00:00.000Z"
+}
+```
+
+### Business Rules
+
+- Rooms are returned ordered by `roomId` ascending.
+- `expiresAt`, `createdAt`, `updatedAt`, and `serverTime` are UTC timestamps formatted as `YYYY-MM-DDTHH:mm:ss.sssZ`.
+
+### Acceptance Criteria
+
+- Returns every persisted room.
+- Does not expose raw client identifiers.
+
 ## POST /api/v1/messages
 
 ### Purpose
