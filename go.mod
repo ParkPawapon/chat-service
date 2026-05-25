@@ -3,7 +3,7 @@ module chat-service
 go 1.25.10
 
 require (
-	github.com/go-chi/chi/v5 v5.2.5
+	github.com/go-chi/chi/v5 v5.3.0
 	github.com/go-playground/validator/v10 v10.30.2
 	github.com/google/uuid v1.6.0
 	github.com/redis/go-redis/v9 v9.19.0
